@@ -2,5 +2,6 @@ go 1.21.0
 
 use (
 	shared
-	services/echo
+	services/fish
+
 )

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package  netmarks_fish;
 
-option go_package = "github.com/JBHua/NetMARKS/proto/fish";
+option go_package = "github.com/JBHua/NetMARKS/services/fish/proto";
 
 service Fish {
   rpc ProduceFish(FishRequest) returns (SingleFish) {}

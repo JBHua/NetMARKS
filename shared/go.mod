@@ -1,4 +1,4 @@
-module VerbosityMonoRepo/shared
+module NetMARKS/shared
 
 go 1.21
 

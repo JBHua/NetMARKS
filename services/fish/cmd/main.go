@@ -1,8 +1,9 @@
 package main
 
 import (
-	"VerbosityMonoRepo/shared"
+	"NetMARKS/shared"
 	"fmt"
+	Fish "github.com/JBHua/NetMARKS/services/fish/proto"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"net/http"
 	"os"
@@ -13,8 +14,7 @@ func UploadMessage(w http.ResponseWriter, r *http.Request) {
 }
 
 type FishServer struct {
-	VUser.UnimplementedVerbosityUserServer
-	repo   *UserRepo
+	Fish.UnimplementedFishServer
 	logger *otelzap.SugaredLogger
 }
 
