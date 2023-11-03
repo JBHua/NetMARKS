@@ -1,0 +1,2 @@
+USE_HTTP=false
+USE_GRPC=false

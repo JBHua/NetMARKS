@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package  netmarks_fish;
+
+option go_package = "github.com/JBHua/NetMARKS/proto/fish";
+
+service Fish {
+  rpc ProduceFish(FishRequest) returns (SingleFish) {}
+}
+
+message FishRequest {
+  string fish_id = 1;
+}
+
+message SingleFish {
+  string fish_id = 1;
+  string fish_random_metadata = 2;
+}
