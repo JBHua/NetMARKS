@@ -9,7 +9,6 @@ service Fish {
 }
 
 message FishRequest {
-  string fish_id = 1;
 }
 
 message SingleFish {

@@ -2,19 +2,39 @@ package main
 
 import (
 	"NetMARKS/shared"
+	"context"
+	"encoding/json"
 	"fmt"
 	Fish "github.com/JBHua/NetMARKS/services/fish/proto"
+	"github.com/ddosify/go-faker/faker"
 	"github.com/joho/godotenv"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.opentelemetry.io/otel/codes"
 	"google.golang.org/grpc"
-	"log"
 	"net"
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
+var ServiceName = "Fish"
 var ServicePortEnv = "FISH_SERVICE_PORT"
+
+func GenerateFakeMetadata() string {
+	f := faker.NewFaker()
+	s := ""
+	for i := 0; i < 5; i++ {
+		s += f.RandomIpv6()
+		s += f.RandomMACAddress()
+	}
+	return s
+}
+
+func GenerateRandomUUID() string {
+	f := faker.NewFaker()
+	return f.RandomUUID().String()
+}
 
 // --------------- gRPC Methods ---------------
 
@@ -29,37 +49,72 @@ func NewFishServer(l *otelzap.SugaredLogger) *FishServer {
 	}
 }
 
-func ProduceFishGRPC() {
+func (s *FishServer) ProduceFish(ctx context.Context, req *Fish.FishRequest) (*Fish.SingleFish, error) {
+	ctx, span := shared.InitServerSpan(ctx, ServiceName)
+	defer span.End()
 
+	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
+	time.Sleep(time.Duration(latency) * time.Millisecond)
+
+	span.SetStatus(codes.Ok, "success")
+
+	f := &Fish.SingleFish{
+		FishId:             GenerateRandomUUID(),
+		FishRandomMetadata: GenerateFakeMetadata(),
+	}
+
+	return f, nil
 }
 
 // --------------- HTTP Methods ---------------
 
-func UploadMessage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, %s", os.Getenv("CITY"))
+type FishHTTP struct {
+	FishId             string
+	FishRandomMetadata string
+}
+
+func ProduceFish(w http.ResponseWriter, r *http.Request) {
+	ctx, span := shared.InitServerSpan(context.Background(), ServiceName)
+	defer span.End()
+
+	r.WithContext(ctx)
+	w.Header().Set("Content-Type", "application/json")
+
+	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
+	time.Sleep(time.Duration(latency) * time.Millisecond)
+
+	d := FishHTTP{
+		FishId:             GenerateRandomUUID(),
+		FishRandomMetadata: GenerateFakeMetadata(),
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(d)
 }
 
 func ProduceFishHTTP(w http.ResponseWriter, r *http.Request) {
-
+	w.Header().Set("Content-Type", "application/json")
 }
 
+// --------------- Main Logic ---------------
+
 func main() {
+	logger := shared.InitSugaredLogger()
+
 	err := godotenv.Load("../../shared/.env")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		logger.Fatal("Error loading .env file")
 	}
 
 	shared.ConfigureRuntime()
-	logger := shared.InitSugaredLogger()
 
 	useGRPC, _ := strconv.ParseBool(os.Getenv("USE_GRPC"))
 	if useGRPC {
-		println("Using GRPC")
+		logger.Info("Using GRPC")
 		listener, err := net.Listen("tcp", fmt.Sprintf(":%s", os.Getenv(ServicePortEnv)))
 		if err != nil {
-			log.Fatalf("could not attach listener to port: %v. %v", os.Getenv(ServicePortEnv), err)
+			logger.Fatalf("could not attach listener to port: %v. %v", os.Getenv(ServicePortEnv), err)
 		}
-		fmt.Printf("Running at %s\n", os.Getenv(ServicePortEnv))
+		logger.Infof("Running at %s\n", os.Getenv(ServicePortEnv))
 
 		grpcServer := grpc.NewServer()
 		Fish.RegisterFishServer(grpcServer, NewFishServer(logger))
@@ -72,18 +127,18 @@ func main() {
 
 		shared.MonitorShutdownSignal()
 	} else {
-		println("Using HTTP")
+		logger.Info("Using HTTP")
 		mux := http.NewServeMux()
-		mux.HandleFunc("/", UploadMessage)
+		mux.HandleFunc("/", ProduceFish)
 
 		// Start HTTP Server
 		port := os.Getenv(ServicePortEnv)
-		fmt.Println(port)
+		logger.Info(port)
 		err = http.ListenAndServe(":"+port, mux)
 
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("service running on port %s\n", port)
+		logger.Infof("service running on port %s\n", port)
 	}
 }

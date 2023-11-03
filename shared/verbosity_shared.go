@@ -153,8 +153,8 @@ func getCallFuncName() string {
 	return spanName
 }
 
-func InitServerSpan(ctx context.Context) (context.Context, trace.Span) {
-	return otel.Tracer("").Start(ctx, getCallFuncName(), trace.WithSpanKind(trace.SpanKindServer))
+func InitServerSpan(ctx context.Context, name string) (context.Context, trace.Span) {
+	return otel.Tracer(name).Start(ctx, getCallFuncName(), trace.WithSpanKind(trace.SpanKindServer))
 }
 
 func InitInternalSpan(ctx context.Context) (context.Context, trace.Span) {
