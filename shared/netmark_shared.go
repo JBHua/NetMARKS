@@ -212,9 +212,28 @@ type BasicTypeHTTPResponse struct {
 	Items    []SingleBasicType
 }
 
-type TreeHTTP struct {
+type SingleFour struct {
 	Id             string
 	RandomMetadata string
+	GrainId        string
+}
+
+type FlourHTTPResponse struct {
+	Quantity uint64
+	Type     string
+	Items    []SingleFour
+}
+
+type SingleLog struct {
+	Id             string
+	RandomMetadata string
+	TreeId         string
+}
+
+type LogHTTPResponse struct {
+	Quantity uint64
+	Type     string
+	Items    []SingleLog
 }
 
 type WaterHTTP struct {

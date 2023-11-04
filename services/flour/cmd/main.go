@@ -92,14 +92,32 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
-	response := shared.BasicTypeHTTPResponse{
+	response := shared.FlourHTTPResponse{
 		Type: ServiceName,
 	}
 	for i := uint64(0); i < quantity; i++ {
 		response.Quantity += 1
-		response.Items = append(response.Items, shared.SingleBasicType{
+
+		getRes, err := http.Get("http://" + os.Getenv("BASE_SERVICE_ADDR") + ":" + os.Getenv("GRAIN_SERVICE_PORT") + "?quantity=1&response_size=1")
+		if err != nil {
+			w.Write([]byte(err.Error()))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		defer getRes.Body.Close()
+
+		var grain shared.BasicTypeHTTPResponse
+		err = json.NewDecoder(getRes.Body).Decode(&grain)
+		if err != nil {
+			w.Write([]byte(err.Error()))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		response.Items = append(response.Items, shared.SingleFour{
 			Id:             shared.GenerateRandomUUID(),
 			RandomMetadata: shared.GenerateFakeMetadataInKB(ctx, responseSize),
+			GrainId:        grain.Items[0].Id,
 		})
 
 		time.Sleep(time.Duration(latency) * time.Millisecond)
