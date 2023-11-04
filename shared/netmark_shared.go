@@ -20,6 +20,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 	"log"
 	"os"
@@ -29,13 +30,7 @@ import (
 	"syscall"
 )
 
-// --------------- Database-Related Operations ---------------
-
 // --------------- Application-Related Operations ---------------
-
-func InitApplication() {
-
-}
 
 func MonitorShutdownSignal() {
 	println("Monitoring shutdown signal")
@@ -162,6 +157,23 @@ func InitServerSpan(ctx context.Context, name string) (context.Context, trace.Sp
 
 func InitInternalSpan(ctx context.Context) (context.Context, trace.Span) {
 	return otel.Tracer("").Start(ctx, getCallFuncName())
+}
+
+// --------------- Shared Data Structure ---------------
+
+func InitGrpcClientConn(targetAddr string) *grpc.ClientConn {
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+	var conn *grpc.ClientConn
+	var err error
+
+	conn, err = grpc.Dial("localhost:"+targetAddr, opts...)
+	if err != nil {
+		panic(err)
+	}
+
+	return conn
 }
 
 // --------------- Shared Data Structure ---------------

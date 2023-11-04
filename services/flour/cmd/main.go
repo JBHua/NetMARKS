@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	Flour "github.com/JBHua/NetMARKS/services/flour/proto"
 	Grain "github.com/JBHua/NetMARKS/services/grain/proto"
 	"github.com/joho/godotenv"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
@@ -17,67 +18,95 @@ import (
 	"time"
 )
 
-var ServiceName = "Grain"
-var ServicePortEnv = "GRAIN_SERVICE_PORT"
+var ServiceName = "Flour"
+var ServicePortEnv = "FLOUR_SERVICE_PORT"
+var GrainServicePortEnv = "GRAIN_SERVICE_PORT"
 
 // --------------- gRPC Methods ---------------
 
-type GrainServer struct {
-	Grain.UnimplementedGrainServer
-	logger *otelzap.SugaredLogger
+type FlourServer struct {
+	Flour.UnimplementedFlourServer
+	logger      *otelzap.SugaredLogger
+	grainClient Grain.GrainClient
 }
 
-func NewGrainServer(l *otelzap.SugaredLogger) *GrainServer {
-	return &GrainServer{
-		logger: l,
+func NewFlourServer(l *otelzap.SugaredLogger, c Grain.GrainClient) *FlourServer {
+	return &FlourServer{
+		logger:      l,
+		grainClient: c,
 	}
 }
 
-func (s *GrainServer) ProduceGrain(ctx context.Context, req *Grain.Request) (*Grain.Single, error) {
+func (s *FlourServer) Produce(ctx context.Context, req *Flour.Request) (*Flour.Response, error) {
 	shared.SetGRPCHeader(&ctx)
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
 	defer span.End()
 
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
-	time.Sleep(time.Duration(latency) * time.Millisecond)
 
-	span.SetStatus(codes.Ok, "success")
+	r := Flour.Response{}
+	for i := uint64(0); i < req.Quantity; i++ {
+		r.Quantity += 1
 
-	f := &Grain.Single{
-		Id:             shared.GenerateRandomUUID(),
-		RandomMetadata: shared.GenerateFakeMetadata(),
+		singleGrain, err := s.grainClient.Produce(ctx, &Grain.Request{
+			Quantity:     1,
+			ResponseSize: 1,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		r.Items = append(r.Items, &Flour.Single{
+			Id:             shared.GenerateRandomUUID(),
+			RandomMetadata: shared.GenerateFakeMetadataInKB(ctx, req.ResponseSize),
+			GrainId:        singleGrain.Items[0].Id,
+		})
+
+		time.Sleep(time.Duration(latency) * time.Millisecond)
 	}
 
-	return f, nil
+	span.SetStatus(codes.Ok, "success")
+	return &r, nil
 }
 
 // --------------- HTTP Methods ---------------
 
-type GrainHTTP struct {
-	Id             string
-	RandomMetadata string
-}
-
-func ProduceGrain(w http.ResponseWriter, r *http.Request) {
+func Produce(w http.ResponseWriter, r *http.Request) {
 	ctx, span := shared.InitServerSpan(context.Background(), ServiceName)
 	defer span.End()
 
 	r.WithContext(ctx)
 	w.Header().Set("Content-Type", "application/json")
 
-	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
-	time.Sleep(time.Duration(latency) * time.Millisecond)
-
-	d := GrainHTTP{
-		Id:             shared.GenerateRandomUUID(),
-		RandomMetadata: shared.GenerateFakeMetadata(),
+	var quantity uint64
+	quantity, err := strconv.ParseUint(r.URL.Query().Get("quantity"), 10, 64)
+	if err != nil {
+		quantity = 1
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(d)
-}
 
-func ProduceFishHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	var responseSize uint64
+	responseSize, err = strconv.ParseUint(r.URL.Query().Get("response_size"), 10, 64)
+	if err != nil {
+		responseSize = 1
+	}
+
+	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
+
+	response := shared.BasicTypeHTTPResponse{
+		Type: ServiceName,
+	}
+	for i := uint64(0); i < quantity; i++ {
+		response.Quantity += 1
+		response.Items = append(response.Items, shared.SingleBasicType{
+			Id:             shared.GenerateRandomUUID(),
+			RandomMetadata: shared.GenerateFakeMetadataInKB(ctx, responseSize),
+		})
+
+		time.Sleep(time.Duration(latency) * time.Millisecond)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }
 
 // --------------- Main Logic ---------------
@@ -102,7 +131,9 @@ func main() {
 		logger.Infof("Running at %s\n", os.Getenv(ServicePortEnv))
 
 		grpcServer := grpc.NewServer()
-		Grain.RegisterGrainServer(grpcServer, NewGrainServer(logger))
+
+		grainClient := Grain.NewGrainClient(shared.InitGrpcClientConn(os.Getenv(GrainServicePortEnv)))
+		Flour.RegisterFlourServer(grpcServer, NewFlourServer(logger, grainClient))
 
 		go func() {
 			if err := grpcServer.Serve(listener); err != nil {
@@ -114,7 +145,7 @@ func main() {
 	} else {
 		logger.Info("Using HTTP")
 		mux := http.NewServeMux()
-		mux.HandleFunc("/", ProduceGrain)
+		mux.HandleFunc("/", Produce)
 
 		// Start HTTP Server
 		port := os.Getenv(ServicePortEnv)

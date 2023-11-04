@@ -34,6 +34,7 @@ func NewFishServer(l *otelzap.SugaredLogger) *FishServer {
 }
 
 func (s *FishServer) Produce(ctx context.Context, req *Fish.Request) (*Fish.Response, error) {
+	shared.SetGRPCHeader(&ctx)
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
 	defer span.End()
 

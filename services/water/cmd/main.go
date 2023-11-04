@@ -34,6 +34,7 @@ func NewWaterServer(l *otelzap.SugaredLogger) *WaterServer {
 }
 
 func (s *WaterServer) Produce(ctx context.Context, req *Water.Request) (*Water.Response, error) {
+	shared.SetGRPCHeader(&ctx)
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
 	defer span.End()
 
