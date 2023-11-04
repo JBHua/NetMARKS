@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
-	"github.com/ddosify/go-faker/faker"
+	"github.com/google/uuid"
 	"github.com/johnsiilver/getcert"
 	"github.com/joho/godotenv"
 	_ "github.com/microsoft/go-mssqldb"
@@ -179,8 +179,7 @@ func InitGrpcClientConn(targetAddr string) *grpc.ClientConn {
 // --------------- Shared Data Structure ---------------
 
 func GenerateRandomUUID() string {
-	f := faker.NewFaker()
-	return f.RandomUUID().String()
+	return uuid.New().String()
 }
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
