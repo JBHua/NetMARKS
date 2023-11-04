@@ -1,4 +1,4 @@
-module github.com/JBHua/NetMARKS/services/water
+module github.com/JBHua/NetMARKS/services/flour
 
 go 1.21
 

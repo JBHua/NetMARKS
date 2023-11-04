@@ -2,6 +2,7 @@ package shared
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"github.com/ddosify/go-faker/faker"
 	"github.com/johnsiilver/getcert"
@@ -165,29 +166,38 @@ func InitInternalSpan(ctx context.Context) (context.Context, trace.Span) {
 
 // --------------- Shared Data Structure ---------------
 
-func GenerateFakeMetadata() string {
-	f := faker.NewFaker()
-	s := ""
-	for i := 0; i < 5; i++ {
-		s += f.RandomIpv6()
-		s += f.RandomMACAddress()
-	}
-	return s
-}
-
 func GenerateRandomUUID() string {
 	f := faker.NewFaker()
 	return f.RandomUUID().String()
 }
 
-type GrainHTTP struct {
+const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+func GenerateFakeMetadataInKB(ctx context.Context, sizeInKB uint64) string {
+	InitInternalSpan(ctx)
+
+	bytes := make([]byte, sizeInKB*1024)
+	rand.Read(bytes)
+
+	for i := range bytes {
+		bytes[i] = charset[bytes[i]%byte(len(charset))]
+	}
+
+	// You can convert the random bytes to a string using base64 encoding or any other method you prefer
+	randomString := string(bytes)
+
+	return randomString
+}
+
+type SingleBasicType struct {
 	Id             string
 	RandomMetadata string
 }
 
-type FishHTTP struct {
-	FishId             string
-	FishRandomMetadata string
+type BasicTypeHTTPResponse struct {
+	Quantity uint64
+	Type     string
+	Items    []SingleBasicType
 }
 
 type TreeHTTP struct {

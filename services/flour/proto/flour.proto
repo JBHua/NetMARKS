@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package  netmarks_grain;
+
+option go_package = "github.com/JBHua/NetMARKS/services/flour/proto";
+
+service Flour {
+  rpc ProduceFlour(Request) returns (Single) {}
+}
+
+message Request {}
+
+message Single {
+  string id = 1;
+  string random_metadata = 2;
+  string grain_id = 3;
+}

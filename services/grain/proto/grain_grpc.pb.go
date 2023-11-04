@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GrainClient interface {
-	ProduceGrain(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Single, error)
+	Produce(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
 }
 
 type grainClient struct {
@@ -33,9 +33,9 @@ func NewGrainClient(cc grpc.ClientConnInterface) GrainClient {
 	return &grainClient{cc}
 }
 
-func (c *grainClient) ProduceGrain(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Single, error) {
-	out := new(Single)
-	err := c.cc.Invoke(ctx, "/netmarks_grain.Grain/ProduceGrain", in, out, opts...)
+func (c *grainClient) Produce(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, "/netmarks_grain.Grain/Produce", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (c *grainClient) ProduceGrain(ctx context.Context, in *Request, opts ...grp
 // All implementations must embed UnimplementedGrainServer
 // for forward compatibility
 type GrainServer interface {
-	ProduceGrain(context.Context, *Request) (*Single, error)
+	Produce(context.Context, *Request) (*Response, error)
 	mustEmbedUnimplementedGrainServer()
 }
 
@@ -54,8 +54,8 @@ type GrainServer interface {
 type UnimplementedGrainServer struct {
 }
 
-func (UnimplementedGrainServer) ProduceGrain(context.Context, *Request) (*Single, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ProduceGrain not implemented")
+func (UnimplementedGrainServer) Produce(context.Context, *Request) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Produce not implemented")
 }
 func (UnimplementedGrainServer) mustEmbedUnimplementedGrainServer() {}
 
@@ -70,20 +70,20 @@ func RegisterGrainServer(s grpc.ServiceRegistrar, srv GrainServer) {
 	s.RegisterService(&Grain_ServiceDesc, srv)
 }
 
-func _Grain_ProduceGrain_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Grain_Produce_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Request)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GrainServer).ProduceGrain(ctx, in)
+		return srv.(GrainServer).Produce(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/netmarks_grain.Grain/ProduceGrain",
+		FullMethod: "/netmarks_grain.Grain/Produce",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GrainServer).ProduceGrain(ctx, req.(*Request))
+		return srv.(GrainServer).Produce(ctx, req.(*Request))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -96,8 +96,8 @@ var Grain_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*GrainServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ProduceGrain",
-			Handler:    _Grain_ProduceGrain_Handler,
+			MethodName: "Produce",
+			Handler:    _Grain_Produce_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

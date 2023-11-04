@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TreeClient interface {
-	ProduceTree(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Single, error)
+	Produce(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
 }
 
 type treeClient struct {
@@ -33,9 +33,9 @@ func NewTreeClient(cc grpc.ClientConnInterface) TreeClient {
 	return &treeClient{cc}
 }
 
-func (c *treeClient) ProduceTree(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Single, error) {
-	out := new(Single)
-	err := c.cc.Invoke(ctx, "/netmarks_tree.Tree/ProduceTree", in, out, opts...)
+func (c *treeClient) Produce(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, "/netmarks_tree.Tree/Produce", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (c *treeClient) ProduceTree(ctx context.Context, in *Request, opts ...grpc.
 // All implementations must embed UnimplementedTreeServer
 // for forward compatibility
 type TreeServer interface {
-	ProduceTree(context.Context, *Request) (*Single, error)
+	Produce(context.Context, *Request) (*Response, error)
 	mustEmbedUnimplementedTreeServer()
 }
 
@@ -54,8 +54,8 @@ type TreeServer interface {
 type UnimplementedTreeServer struct {
 }
 
-func (UnimplementedTreeServer) ProduceTree(context.Context, *Request) (*Single, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ProduceTree not implemented")
+func (UnimplementedTreeServer) Produce(context.Context, *Request) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Produce not implemented")
 }
 func (UnimplementedTreeServer) mustEmbedUnimplementedTreeServer() {}
 
@@ -70,20 +70,20 @@ func RegisterTreeServer(s grpc.ServiceRegistrar, srv TreeServer) {
 	s.RegisterService(&Tree_ServiceDesc, srv)
 }
 
-func _Tree_ProduceTree_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Tree_Produce_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Request)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TreeServer).ProduceTree(ctx, in)
+		return srv.(TreeServer).Produce(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/netmarks_tree.Tree/ProduceTree",
+		FullMethod: "/netmarks_tree.Tree/Produce",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TreeServer).ProduceTree(ctx, req.(*Request))
+		return srv.(TreeServer).Produce(ctx, req.(*Request))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -96,8 +96,8 @@ var Tree_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*TreeServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ProduceTree",
-			Handler:    _Tree_ProduceTree_Handler,
+			MethodName: "Produce",
+			Handler:    _Tree_Produce_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

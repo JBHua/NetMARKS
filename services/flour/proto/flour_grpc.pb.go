@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v4.24.4
-// source: water.proto
+// source: flour.proto
 
 package proto
 
@@ -101,5 +101,5 @@ var Water_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "water.proto",
+	Metadata: "flour.proto",
 }

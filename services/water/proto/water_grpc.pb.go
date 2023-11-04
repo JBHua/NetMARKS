@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type WaterClient interface {
-	ProduceWater(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Single, error)
+	Produce(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
 }
 
 type waterClient struct {
@@ -33,9 +33,9 @@ func NewWaterClient(cc grpc.ClientConnInterface) WaterClient {
 	return &waterClient{cc}
 }
 
-func (c *waterClient) ProduceWater(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Single, error) {
-	out := new(Single)
-	err := c.cc.Invoke(ctx, "/netmarks_grain.Water/ProduceWater", in, out, opts...)
+func (c *waterClient) Produce(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, "/netmarks_grain.Water/Produce", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (c *waterClient) ProduceWater(ctx context.Context, in *Request, opts ...grp
 // All implementations must embed UnimplementedWaterServer
 // for forward compatibility
 type WaterServer interface {
-	ProduceWater(context.Context, *Request) (*Single, error)
+	Produce(context.Context, *Request) (*Response, error)
 	mustEmbedUnimplementedWaterServer()
 }
 
@@ -54,8 +54,8 @@ type WaterServer interface {
 type UnimplementedWaterServer struct {
 }
 
-func (UnimplementedWaterServer) ProduceWater(context.Context, *Request) (*Single, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ProduceWater not implemented")
+func (UnimplementedWaterServer) Produce(context.Context, *Request) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Produce not implemented")
 }
 func (UnimplementedWaterServer) mustEmbedUnimplementedWaterServer() {}
 
@@ -70,20 +70,20 @@ func RegisterWaterServer(s grpc.ServiceRegistrar, srv WaterServer) {
 	s.RegisterService(&Water_ServiceDesc, srv)
 }
 
-func _Water_ProduceWater_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Water_Produce_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Request)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WaterServer).ProduceWater(ctx, in)
+		return srv.(WaterServer).Produce(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/netmarks_grain.Water/ProduceWater",
+		FullMethod: "/netmarks_grain.Water/Produce",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WaterServer).ProduceWater(ctx, req.(*Request))
+		return srv.(WaterServer).Produce(ctx, req.(*Request))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -96,8 +96,8 @@ var Water_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*WaterServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ProduceWater",
-			Handler:    _Water_ProduceWater_Handler,
+			MethodName: "Produce",
+			Handler:    _Water_Produce_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

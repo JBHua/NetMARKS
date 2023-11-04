@@ -5,10 +5,17 @@ package  netmarks_fish;
 option go_package = "github.com/JBHua/NetMARKS/services/fish/proto";
 
 service Fish {
-  rpc Produce(Request) returns (Single) {}
+  rpc Produce(Request) returns (Response) {}
 }
 
 message Request {
+  uint64 quantity = 1;
+  uint64 response_size = 2;
+}
+
+message Response {
+  uint64 quantity = 1;
+  repeated Single items = 2;
 }
 
 message Single {

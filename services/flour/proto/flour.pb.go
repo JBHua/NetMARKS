@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.28.1
 // 	protoc        v4.24.4
-// source: water.proto
+// source: flour.proto
 
 package proto
 
@@ -29,7 +29,7 @@ type Request struct {
 func (x *Request) Reset() {
 	*x = Request{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_water_proto_msgTypes[0]
+		mi := &file_flour_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -42,7 +42,7 @@ func (x *Request) String() string {
 func (*Request) ProtoMessage() {}
 
 func (x *Request) ProtoReflect() protoreflect.Message {
-	mi := &file_water_proto_msgTypes[0]
+	mi := &file_flour_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -55,7 +55,7 @@ func (x *Request) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Request.ProtoReflect.Descriptor instead.
 func (*Request) Descriptor() ([]byte, []int) {
-	return file_water_proto_rawDescGZIP(), []int{0}
+	return file_flour_proto_rawDescGZIP(), []int{0}
 }
 
 type Single struct {
@@ -70,7 +70,7 @@ type Single struct {
 func (x *Single) Reset() {
 	*x = Single{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_water_proto_msgTypes[1]
+		mi := &file_flour_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -83,7 +83,7 @@ func (x *Single) String() string {
 func (*Single) ProtoMessage() {}
 
 func (x *Single) ProtoReflect() protoreflect.Message {
-	mi := &file_water_proto_msgTypes[1]
+	mi := &file_flour_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -96,7 +96,7 @@ func (x *Single) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Single.ProtoReflect.Descriptor instead.
 func (*Single) Descriptor() ([]byte, []int) {
-	return file_water_proto_rawDescGZIP(), []int{1}
+	return file_flour_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Single) GetId() string {
@@ -113,10 +113,10 @@ func (x *Single) GetRandomMetadata() string {
 	return ""
 }
 
-var File_water_proto protoreflect.FileDescriptor
+var File_flour_proto protoreflect.FileDescriptor
 
-var file_water_proto_rawDesc = []byte{
-	0x0a, 0x0b, 0x77, 0x61, 0x74, 0x65, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x0e, 0x6e,
+var file_flour_proto_rawDesc = []byte{
+	0x0a, 0x0b, 0x66, 0x6c, 0x6f, 0x75, 0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x0e, 0x6e,
 	0x65, 0x74, 0x6d, 0x61, 0x72, 0x6b, 0x73, 0x5f, 0x67, 0x72, 0x61, 0x69, 0x6e, 0x22, 0x09, 0x0a,
 	0x07, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x41, 0x0a, 0x06, 0x53, 0x69, 0x6e, 0x67,
 	0x6c, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02,
@@ -135,23 +135,23 @@ var file_water_proto_rawDesc = []byte{
 }
 
 var (
-	file_water_proto_rawDescOnce sync.Once
-	file_water_proto_rawDescData = file_water_proto_rawDesc
+	file_flour_proto_rawDescOnce sync.Once
+	file_flour_proto_rawDescData = file_flour_proto_rawDesc
 )
 
-func file_water_proto_rawDescGZIP() []byte {
-	file_water_proto_rawDescOnce.Do(func() {
-		file_water_proto_rawDescData = protoimpl.X.CompressGZIP(file_water_proto_rawDescData)
+func file_flour_proto_rawDescGZIP() []byte {
+	file_flour_proto_rawDescOnce.Do(func() {
+		file_flour_proto_rawDescData = protoimpl.X.CompressGZIP(file_flour_proto_rawDescData)
 	})
-	return file_water_proto_rawDescData
+	return file_flour_proto_rawDescData
 }
 
-var file_water_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_water_proto_goTypes = []interface{}{
+var file_flour_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_flour_proto_goTypes = []interface{}{
 	(*Request)(nil), // 0: netmarks_grain.Request
 	(*Single)(nil),  // 1: netmarks_grain.Single
 }
-var file_water_proto_depIdxs = []int32{
+var file_flour_proto_depIdxs = []int32{
 	0, // 0: netmarks_grain.Water.ProduceWater:input_type -> netmarks_grain.Request
 	1, // 1: netmarks_grain.Water.ProduceWater:output_type -> netmarks_grain.Single
 	1, // [1:2] is the sub-list for method output_type
@@ -161,13 +161,13 @@ var file_water_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_water_proto_init() }
-func file_water_proto_init() {
-	if File_water_proto != nil {
+func init() { file_flour_proto_init() }
+func file_flour_proto_init() {
+	if File_flour_proto != nil {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_water_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_flour_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Request); i {
 			case 0:
 				return &v.state
@@ -179,7 +179,7 @@ func file_water_proto_init() {
 				return nil
 			}
 		}
-		file_water_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_flour_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Single); i {
 			case 0:
 				return &v.state
@@ -196,18 +196,18 @@ func file_water_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_water_proto_rawDesc,
+			RawDescriptor: file_flour_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_water_proto_goTypes,
-		DependencyIndexes: file_water_proto_depIdxs,
-		MessageInfos:      file_water_proto_msgTypes,
+		GoTypes:           file_flour_proto_goTypes,
+		DependencyIndexes: file_flour_proto_depIdxs,
+		MessageInfos:      file_flour_proto_msgTypes,
 	}.Build()
-	File_water_proto = out.File
-	file_water_proto_rawDesc = nil
-	file_water_proto_goTypes = nil
-	file_water_proto_depIdxs = nil
+	File_flour_proto = out.File
+	file_flour_proto_rawDesc = nil
+	file_flour_proto_goTypes = nil
+	file_flour_proto_depIdxs = nil
 }

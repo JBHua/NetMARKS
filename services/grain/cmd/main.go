@@ -33,42 +33,66 @@ func NewGrainServer(l *otelzap.SugaredLogger) *GrainServer {
 	}
 }
 
-func (s *GrainServer) ProduceGrain(ctx context.Context, req *Grain.Request) (*Grain.Single, error) {
+func (s *GrainServer) Produce(ctx context.Context, req *Grain.Request) (*Grain.Response, error) {
 	shared.SetGRPCHeader(&ctx)
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
 	defer span.End()
 
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
-	time.Sleep(time.Duration(latency) * time.Millisecond)
 
-	span.SetStatus(codes.Ok, "success")
+	r := Grain.Response{}
+	for i := uint64(0); i < req.Quantity; i++ {
+		r.Quantity += 1
+		r.Items = append(r.Items, &Grain.Single{
+			Id:             shared.GenerateRandomUUID(),
+			RandomMetadata: shared.GenerateFakeMetadataInKB(ctx, req.ResponseSize),
+		})
 
-	g := &Grain.Single{
-		Id:             shared.GenerateRandomUUID(),
-		RandomMetadata: shared.GenerateFakeMetadata(),
+		time.Sleep(time.Duration(latency) * time.Millisecond)
 	}
 
-	return g, nil
+	span.SetStatus(codes.Ok, "success")
+	return &r, nil
 }
 
 // --------------- HTTP Methods ---------------
 
-func ProduceGrain(w http.ResponseWriter, r *http.Request) {
+func Produce(w http.ResponseWriter, r *http.Request) {
 	ctx, span := shared.InitServerSpan(context.Background(), ServiceName)
 	defer span.End()
 
 	r.WithContext(ctx)
 	w.Header().Set("Content-Type", "application/json")
 
-	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
-	time.Sleep(time.Duration(latency) * time.Millisecond)
-
-	d := shared.GrainHTTP{
-		Id:             shared.GenerateRandomUUID(),
-		RandomMetadata: shared.GenerateFakeMetadata(),
+	var quantity uint64
+	quantity, err := strconv.ParseUint(r.URL.Query().Get("quantity"), 10, 64)
+	if err != nil {
+		quantity = 1
 	}
+
+	var responseSize uint64
+	responseSize, err = strconv.ParseUint(r.URL.Query().Get("response_size"), 10, 64)
+	if err != nil {
+		responseSize = 1
+	}
+
+	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
+
+	response := shared.BasicTypeHTTPResponse{
+		Type: ServiceName,
+	}
+	for i := uint64(0); i < quantity; i++ {
+		response.Quantity += 1
+		response.Items = append(response.Items, shared.SingleBasicType{
+			Id:             shared.GenerateRandomUUID(),
+			RandomMetadata: shared.GenerateFakeMetadataInKB(ctx, responseSize),
+		})
+
+		time.Sleep(time.Duration(latency) * time.Millisecond)
+	}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(d)
+	json.NewEncoder(w).Encode(response)
 }
 
 // --------------- Main Logic ---------------
@@ -105,7 +129,7 @@ func main() {
 	} else {
 		logger.Info("Using HTTP")
 		mux := http.NewServeMux()
-		mux.HandleFunc("/", ProduceGrain)
+		mux.HandleFunc("/", Produce)
 
 		// Start HTTP Server
 		port := os.Getenv(ServicePortEnv)

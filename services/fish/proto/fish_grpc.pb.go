@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type FishClient interface {
-	Produce(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Single, error)
+	Produce(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
 }
 
 type fishClient struct {
@@ -33,8 +33,8 @@ func NewFishClient(cc grpc.ClientConnInterface) FishClient {
 	return &fishClient{cc}
 }
 
-func (c *fishClient) Produce(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Single, error) {
-	out := new(Single)
+func (c *fishClient) Produce(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
 	err := c.cc.Invoke(ctx, "/netmarks_fish.Fish/Produce", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (c *fishClient) Produce(ctx context.Context, in *Request, opts ...grpc.Call
 // All implementations must embed UnimplementedFishServer
 // for forward compatibility
 type FishServer interface {
-	Produce(context.Context, *Request) (*Single, error)
+	Produce(context.Context, *Request) (*Response, error)
 	mustEmbedUnimplementedFishServer()
 }
 
@@ -54,7 +54,7 @@ type FishServer interface {
 type UnimplementedFishServer struct {
 }
 
-func (UnimplementedFishServer) Produce(context.Context, *Request) (*Single, error) {
+func (UnimplementedFishServer) Produce(context.Context, *Request) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Produce not implemented")
 }
 func (UnimplementedFishServer) mustEmbedUnimplementedFishServer() {}
