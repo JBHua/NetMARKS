@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type FishClient interface {
-	ProduceFish(ctx context.Context, in *FishRequest, opts ...grpc.CallOption) (*SingleFish, error)
+	Produce(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Single, error)
 }
 
 type fishClient struct {
@@ -33,9 +33,9 @@ func NewFishClient(cc grpc.ClientConnInterface) FishClient {
 	return &fishClient{cc}
 }
 
-func (c *fishClient) ProduceFish(ctx context.Context, in *FishRequest, opts ...grpc.CallOption) (*SingleFish, error) {
-	out := new(SingleFish)
-	err := c.cc.Invoke(ctx, "/netmarks_fish.Fish/ProduceFish", in, out, opts...)
+func (c *fishClient) Produce(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Single, error) {
+	out := new(Single)
+	err := c.cc.Invoke(ctx, "/netmarks_fish.Fish/Produce", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (c *fishClient) ProduceFish(ctx context.Context, in *FishRequest, opts ...g
 // All implementations must embed UnimplementedFishServer
 // for forward compatibility
 type FishServer interface {
-	ProduceFish(context.Context, *FishRequest) (*SingleFish, error)
+	Produce(context.Context, *Request) (*Single, error)
 	mustEmbedUnimplementedFishServer()
 }
 
@@ -54,8 +54,8 @@ type FishServer interface {
 type UnimplementedFishServer struct {
 }
 
-func (UnimplementedFishServer) ProduceFish(context.Context, *FishRequest) (*SingleFish, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ProduceFish not implemented")
+func (UnimplementedFishServer) Produce(context.Context, *Request) (*Single, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Produce not implemented")
 }
 func (UnimplementedFishServer) mustEmbedUnimplementedFishServer() {}
 
@@ -70,20 +70,20 @@ func RegisterFishServer(s grpc.ServiceRegistrar, srv FishServer) {
 	s.RegisterService(&Fish_ServiceDesc, srv)
 }
 
-func _Fish_ProduceFish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FishRequest)
+func _Fish_Produce_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Request)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FishServer).ProduceFish(ctx, in)
+		return srv.(FishServer).Produce(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/netmarks_fish.Fish/ProduceFish",
+		FullMethod: "/netmarks_fish.Fish/Produce",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FishServer).ProduceFish(ctx, req.(*FishRequest))
+		return srv.(FishServer).Produce(ctx, req.(*Request))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -96,8 +96,8 @@ var Fish_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*FishServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ProduceFish",
-			Handler:    _Fish_ProduceFish_Handler,
+			MethodName: "Produce",
+			Handler:    _Fish_Produce_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -3,5 +3,8 @@ go 1.21.0
 use (
 	shared
 	services/fish
-
+	services/grain
+	services/tree
+	services/water
+	services/flour
 )

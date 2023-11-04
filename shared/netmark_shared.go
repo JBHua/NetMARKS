@@ -3,6 +3,7 @@ package shared
 import (
 	"context"
 	"fmt"
+	"github.com/ddosify/go-faker/faker"
 	"github.com/johnsiilver/getcert"
 	"github.com/joho/godotenv"
 	_ "github.com/microsoft/go-mssqldb"
@@ -85,6 +86,7 @@ func LoadEnvFile(additionalEnv string) {
 }
 
 // --------------- Observability-Related Operations ---------------
+
 func InitTracerProvider(debug bool, service string) (*sdktrace.TracerProvider, error) {
 	var secureOption otlptracegrpc.Option
 	var addr string
@@ -159,4 +161,41 @@ func InitServerSpan(ctx context.Context, name string) (context.Context, trace.Sp
 
 func InitInternalSpan(ctx context.Context) (context.Context, trace.Span) {
 	return otel.Tracer("").Start(ctx, getCallFuncName())
+}
+
+// --------------- Shared Data Structure ---------------
+
+func GenerateFakeMetadata() string {
+	f := faker.NewFaker()
+	s := ""
+	for i := 0; i < 5; i++ {
+		s += f.RandomIpv6()
+		s += f.RandomMACAddress()
+	}
+	return s
+}
+
+func GenerateRandomUUID() string {
+	f := faker.NewFaker()
+	return f.RandomUUID().String()
+}
+
+type GrainHTTP struct {
+	Id             string
+	RandomMetadata string
+}
+
+type FishHTTP struct {
+	FishId             string
+	FishRandomMetadata string
+}
+
+type TreeHTTP struct {
+	Id             string
+	RandomMetadata string
+}
+
+type WaterHTTP struct {
+	Id             string
+	RandomMetadata string
 }

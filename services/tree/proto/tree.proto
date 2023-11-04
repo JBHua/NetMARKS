@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package  netmarks_tree;
+
+option go_package = "github.com/JBHua/NetMARKS/services/tree/proto";
+
+service Tree {
+  rpc ProduceTree(Request) returns (Single) {}
+}
+
+message Request {}
+
+message Single {
+  string id = 1;
+  string random_metadata = 2;
+}

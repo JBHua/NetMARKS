@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	Fish "github.com/JBHua/NetMARKS/services/fish/proto"
+	Grain "github.com/JBHua/NetMARKS/services/grain/proto"
 	"github.com/joho/godotenv"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/codes"
@@ -17,23 +17,24 @@ import (
 	"time"
 )
 
-var ServiceName = "Fish"
-var ServicePortEnv = "FISH_SERVICE_PORT"
+var ServiceName = "Grain"
+var ServicePortEnv = "GRAIN_SERVICE_PORT"
 
 // --------------- gRPC Methods ---------------
 
-type FishServer struct {
-	Fish.UnimplementedFishServer
+type GrainServer struct {
+	Grain.UnimplementedGrainServer
 	logger *otelzap.SugaredLogger
 }
 
-func NewFishServer(l *otelzap.SugaredLogger) *FishServer {
-	return &FishServer{
+func NewGrainServer(l *otelzap.SugaredLogger) *GrainServer {
+	return &GrainServer{
 		logger: l,
 	}
 }
 
-func (s *FishServer) ProduceFish(ctx context.Context, req *Fish.Request) (*Fish.Single, error) {
+func (s *GrainServer) ProduceGrain(ctx context.Context, req *Grain.Request) (*Grain.Single, error) {
+	shared.SetGRPCHeader(&ctx)
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
 	defer span.End()
 
@@ -42,17 +43,17 @@ func (s *FishServer) ProduceFish(ctx context.Context, req *Fish.Request) (*Fish.
 
 	span.SetStatus(codes.Ok, "success")
 
-	f := &Fish.Single{
+	g := &Grain.Single{
 		Id:             shared.GenerateRandomUUID(),
 		RandomMetadata: shared.GenerateFakeMetadata(),
 	}
 
-	return f, nil
+	return g, nil
 }
 
 // --------------- HTTP Methods ---------------
 
-func ProduceFish(w http.ResponseWriter, r *http.Request) {
+func ProduceGrain(w http.ResponseWriter, r *http.Request) {
 	ctx, span := shared.InitServerSpan(context.Background(), ServiceName)
 	defer span.End()
 
@@ -62,9 +63,9 @@ func ProduceFish(w http.ResponseWriter, r *http.Request) {
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 	time.Sleep(time.Duration(latency) * time.Millisecond)
 
-	d := shared.FishHTTP{
-		FishId:             shared.GenerateRandomUUID(),
-		FishRandomMetadata: shared.GenerateFakeMetadata(),
+	d := shared.GrainHTTP{
+		Id:             shared.GenerateRandomUUID(),
+		RandomMetadata: shared.GenerateFakeMetadata(),
 	}
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(d)
@@ -92,7 +93,7 @@ func main() {
 		logger.Infof("Running at %s\n", os.Getenv(ServicePortEnv))
 
 		grpcServer := grpc.NewServer()
-		Fish.RegisterFishServer(grpcServer, NewFishServer(logger))
+		Grain.RegisterGrainServer(grpcServer, NewGrainServer(logger))
 
 		go func() {
 			if err := grpcServer.Serve(listener); err != nil {
@@ -104,7 +105,7 @@ func main() {
 	} else {
 		logger.Info("Using HTTP")
 		mux := http.NewServeMux()
-		mux.HandleFunc("/", ProduceFish)
+		mux.HandleFunc("/", ProduceGrain)
 
 		// Start HTTP Server
 		port := os.Getenv(ServicePortEnv)

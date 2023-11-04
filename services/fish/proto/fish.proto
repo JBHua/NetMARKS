@@ -5,13 +5,13 @@ package  netmarks_fish;
 option go_package = "github.com/JBHua/NetMARKS/services/fish/proto";
 
 service Fish {
-  rpc ProduceFish(FishRequest) returns (SingleFish) {}
+  rpc Produce(Request) returns (Single) {}
 }
 
-message FishRequest {
+message Request {
 }
 
-message SingleFish {
-  string fish_id = 1;
-  string fish_random_metadata = 2;
+message Single {
+  string id = 1;
+  string random_metadata = 2;
 }
