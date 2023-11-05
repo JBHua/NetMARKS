@@ -2,22 +2,24 @@
 FROM golang:1.21.1-alpine3.18 as stage1
 
 # Set the working directory inside the container
-WORKDIR /app
+WORKDIR /
 
-COPY ./services/echo/go.mod ./
-COPY ./services/echo/go.sum ./
+COPY ./services/fish/go.mod ./
+COPY ./services/fish/go.sum ./
 
 RUN go mod download
 
 COPY . .
 
 # Build the Go application
-RUN go build -o echo ./services/echo/cmd
+RUN go build -o fish ./services/fish/cmd
 
 FROM alpine:3.18
 
-COPY --from=stage1 /app/echo .
+COPY --from=stage1 /fish .
 
 EXPOSE 8080
 
-CMD ["./echo"]
+ENV SERVICE_PORT=50001
+
+CMD ["./fish"]
