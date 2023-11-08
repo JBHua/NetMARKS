@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-fish
+  labels:
+    app: nginx
+spec:
+  replicas: 20
+  selector:
+    matchLabels:
+      app: netmarks-fish
+  template:
+    metadata:
+      labels:
+        app: netmarks-fish
+    spec:
+      containers:
+        - name: netmarks-fish
+          image: fish:0.1.3
+          ports:
+            - containerPort: 8080
