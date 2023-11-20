@@ -6,6 +6,8 @@ import (
 	"fmt"
 	Fish "github.com/JBHua/NetMARKS/services/fish/proto"
 	"github.com/JBHua/NetMARKS/shared"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/codes"
 	"google.golang.org/grpc"
@@ -113,6 +115,8 @@ func main() {
 		grpcServer := grpc.NewServer()
 		Fish.RegisterFishServer(grpcServer, NewFishServer(logger))
 
+		grpc_prometheus.Register(grpcServer)
+
 		go func() {
 			if err := grpcServer.Serve(listener); err != nil {
 				logger.Fatalf("could not start grpc server: %v", err)
@@ -124,6 +128,7 @@ func main() {
 		logger.Info("Using HTTP")
 		mux := http.NewServeMux()
 		mux.HandleFunc("/", Produce)
+		http.Handle("/metrics", promhttp.Handler())
 
 		// Start HTTP Server
 		port := os.Getenv(ServicePortEnv)

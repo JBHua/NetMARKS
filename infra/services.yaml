@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: netmarks-fish
+spec:
+  selector:
+    app: netmarks-fish
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+
+#---
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  name: my-service
+#  annotations:
+#    prometheus.io/scrape: 'true'
+#    prometheus.io/path: '/metrics'
+#    prometheus.io/port: '8080'
+#spec:
+#  selector:
+#    app: my-application
+#  ports:
+#    - protocol: TCP
+#      port: 80
+#      targetPort: 8080
