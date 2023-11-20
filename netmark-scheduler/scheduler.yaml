@@ -1,0 +1,21 @@
+apiVersion: kubescheduler.config.k8s.io/v1
+kind: KubeSchedulerConfiguration
+leaderElection:
+  # (Optional) Change true to false if you are not running a HA control-plane.
+  leaderElect: false
+#clientConnection:
+#  kubeconfig: /etc/kubernetes/scheduler.conf
+profiles:
+  - schedulerName: custom-scheduler
+    plugins:
+      score:
+        enabled:
+          - name: "NetworkTraffic"
+        disabled:
+          - name: "*"
+    pluginConfig:
+      - name: "NetworkTraffic"
+        args:
+          ip: "http://10.0.0.4:9090"
+          deviceName: "eth0"
+          timeRange: 60

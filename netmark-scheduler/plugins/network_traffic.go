@@ -8,8 +8,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog"
+	framework "k8s.io/kubernetes/pkg/scheduler/framework"
 	fruntime "k8s.io/kubernetes/pkg/scheduler/framework/runtime"
-	framework "k8s.io/kubernetes/pkg/scheduler/framework/v1alpha1"
 )
 
 const Name = "NetworkTraffic"
@@ -21,7 +21,7 @@ type NetworkTraffic struct {
 	// FrameworkHandle 提供插件可以使用的数据和一些工具。
 	// 它在插件初始化时传递给 plugin 工厂类。
 	// plugin 必须存储和使用这个handle来调用framework函数。
-	handle framework.FrameworkHandle
+	handle framework.Handle
 }
 
 // FitArgs holds the args that are used to configure the plugin.
@@ -32,7 +32,7 @@ type NetworkTrafficArgs struct {
 }
 
 // New initializes a new plugin and returns it.
-func New(plArgs runtime.Object, h framework.FrameworkHandle) (framework.Plugin, error) {
+func New(plArgs runtime.Object, h framework.Handle) (framework.Plugin, error) {
 	args := &NetworkTrafficArgs{}
 	if err := fruntime.DecodeInto(plArgs, args); err != nil {
 		return nil, err

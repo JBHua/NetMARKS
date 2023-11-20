@@ -22,6 +22,15 @@ kubectl port-forward svc/prometheus 9090:9090 -n istio-system
 ```
 
 ### 
+Envoy sidecar
+
+
+## How to Install Scheduler-plugins && Run your own scheduler
+See:
+https://github.com/kubernetes-sigs/scheduler-plugins/blob/master/doc/install.md
+
+How to login minikube control plane:
+https://minikube.sigs.k8s.io/docs/commands/ssh/
 
 ## TODO:
 https://kubernetes.io/docs/concepts/cluster-administration/system-metrics/
