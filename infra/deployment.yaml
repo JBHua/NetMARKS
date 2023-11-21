@@ -19,3 +19,4 @@ spec:
           image: fish:0.1.5
           ports:
             - containerPort: 8080
+      schedulerName: netmark-scheduler

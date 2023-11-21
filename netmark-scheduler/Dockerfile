@@ -25,6 +25,6 @@ FROM alpine AS runner
 WORKDIR /go/scheduler
 
 COPY --from=builder /scheduler/scheduler .
-COPY --from=builder /scheduler/scheduler.yaml /etc/
+COPY --from=builder /scheduler/infra/scheduler.yaml /etc/
 
 VOLUME ["./scheduler"]

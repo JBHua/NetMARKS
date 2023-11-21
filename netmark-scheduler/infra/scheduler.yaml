@@ -3,8 +3,6 @@ kind: KubeSchedulerConfiguration
 leaderElection:
   # (Optional) Change true to false if you are not running a HA control-plane.
   leaderElect: false
-#clientConnection:
-#  kubeconfig: /etc/kubernetes/scheduler.conf
 profiles:
   - schedulerName: custom-scheduler
     plugins:

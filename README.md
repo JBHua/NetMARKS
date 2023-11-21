@@ -2,7 +2,15 @@
 
 ## Project Structure
 
-## Deployment
+## Setup
+1. Install Dependencies
+    minikube: https://minikube.sigs.k8s.io/docs/start/
+2. Start Local k8s cluster using minikube
+   ```shell
+   minikube start --nodes <nodeCount>
+   ```
+
+## Deployment 
 ### Intro
 We are doing dev locally, which means we don't push our test service's image to cloud. Thus, we need to load image:
     See: https://minikube.sigs.k8s.io/docs/handbook/pushing/#7-loading-directly-to-in-cluster-container-runtime
@@ -19,6 +27,11 @@ kubectl apply -f infra/pods.yaml
 ### Expose/Forward 
 ```shell
 kubectl port-forward svc/prometheus 9090:9090 -n istio-system
+```
+
+### Get All Pods
+```shell
+kubectl get po -A
 ```
 
 ### 

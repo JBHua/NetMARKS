@@ -10,4 +10,4 @@ minikube image load netmarks-scheduler:latest
 kubectl delete -n kube-system deployment netmark-scheduler
 
 # Step 4: Deploy the newer version
-kubectl apply -f ./deployment.yaml
+kubectl apply -f ./infra/deployment.yaml
