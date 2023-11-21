@@ -14,7 +14,10 @@ import (
 const (
 	// nodeMeasureQueryTemplate is the template string to get the query for the node used bandwidth
 	// nodeMeasureQueryTemplate = "sum_over_time(node_network_receive_bytes_total{device=\"%s\"}[%ss])"
-	nodeMeasureQueryTemplate = "sum_over_time(node_network_receive_bytes_total{device=\"%s\"}[%ss]) * on(instance) group_left(nodename) (node_uname_info{nodename=\"%s\"})"
+	//nodeMeasureQueryTemplate = "sum_over_time(node_network_receive_bytes_total{device=\"%s\"}[%ss]) * on(instance) group_left(nodename) (node_uname_info{nodename=\"%s\"})"
+	//nodeMeasureQueryTemplate = "istio_request_bytes_sum"
+	//nodeMesaureQuery = "istio_request_bytes_sum"
+	nodeMesaureQuery = "sum_over_time(process_cpu_seconds_total[1y])"
 )
 
 type PrometheusHandle struct {
@@ -38,16 +41,23 @@ func NewProme(ip, deviceName string, timeRace time.Duration) *PrometheusHandle {
 }
 
 func (p *PrometheusHandle) GetGauge(node string) (*model.Sample, error) {
+	value, err := p.query(fmt.Sprintf(nodeMesaureQuery))
 
-	value, err := p.query(fmt.Sprintf(nodeMeasureQueryTemplate, node, p.deviceName, p.timeRange))
-	fmt.Println(fmt.Sprintf(nodeMeasureQueryTemplate, p.deviceName, p.timeRange, node))
+	//fmt.Println(fmt.Sprintf(nodeMesaureQuery, p.deviceName, p.timeRange, node))
+
+	klog.Infof("[NetworkTraffic] Prometheus Query: %s", nodeMesaureQuery)
+	klog.Infof("[NetworkTraffic] Prometheus Device Name: %s", p.deviceName)
+	klog.Infof("[NetworkTraffic] Prometheus Time Range: %s", p.timeRange)
+	klog.Infof("[NetworkTraffic] Prometheus Node: %s", node)
+
 	if err != nil {
 		return nil, fmt.Errorf("[NetworkTraffic Plugin] Error querying prometheus: %w", err)
 	}
 
 	nodeMeasure := value.(model.Vector)
-	if len(nodeMeasure) != 1 {
-		return nil, fmt.Errorf("[NetworkTraffic Plugin] Invalid response, expected 1 value, got %d", len(nodeMeasure))
+	// TODO: What if we have an empty query result?
+	if len(nodeMeasure) == 0 {
+		return nil, fmt.Errorf("[NetworkTraffic Plugin] Empty response. Response Len: %d", len(nodeMeasure))
 	}
 	return nodeMeasure[0], nil
 }

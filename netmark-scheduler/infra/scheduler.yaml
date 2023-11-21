@@ -4,7 +4,7 @@ leaderElection:
   # (Optional) Change true to false if you are not running a HA control-plane.
   leaderElect: false
 profiles:
-  - schedulerName: custom-scheduler
+  - schedulerName: netmark-scheduler
     plugins:
       score:
         enabled:
@@ -14,6 +14,6 @@ profiles:
     pluginConfig:
       - name: "NetworkTraffic"
         args:
-          ip: "http://10.0.0.4:9090"
+          ip: "http://prometheus.istio-system:9090"
           deviceName: "eth0"
           timeRange: 60
