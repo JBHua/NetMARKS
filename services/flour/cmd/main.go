@@ -17,9 +17,9 @@ import (
 	"time"
 )
 
-var ServiceName = "Flour"
-var ServicePortEnv = "FLOUR_SERVICE_PORT"
-var GrainServicePortEnv = "GRAIN_SERVICE_PORT"
+const ServiceName = "Flour"
+const ServicePort = "8080"
+const GrainServiceAddr = "netmarks-grain.default.svc.cluster.local:5018"
 
 // --------------- gRPC Methods ---------------
 
@@ -97,7 +97,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 	for i := uint64(0); i < quantity; i++ {
 		response.Quantity += 1
 
-		getRes, err := http.Get("http://" + os.Getenv("BASE_SERVICE_ADDR") + ":" + os.Getenv("GRAIN_SERVICE_PORT") + "?quantity=1&response_size=1")
+		getRes, err := http.Get("http://" + GrainServiceAddr + "?quantity=1&response_size=1")
 		if err != nil {
 			w.Write([]byte(err.Error()))
 			w.WriteHeader(http.StatusInternalServerError)
@@ -136,15 +136,15 @@ func main() {
 	useGRPC, _ := strconv.ParseBool(os.Getenv("USE_GRPC"))
 	if useGRPC {
 		logger.Info("Using GRPC")
-		listener, err := net.Listen("tcp", fmt.Sprintf(":%s", os.Getenv(ServicePortEnv)))
+		listener, err := net.Listen("tcp", fmt.Sprintf(":%s", ServicePort))
 		if err != nil {
-			logger.Fatalf("could not attach listener to port: %v. %v", os.Getenv(ServicePortEnv), err)
+			logger.Fatalf("could not attach listener to port: %v. %v", ServicePort, err)
 		}
-		logger.Infof("Running at %s\n", os.Getenv(ServicePortEnv))
+		logger.Infof("Running at %s\n", ServicePort)
+
+		grainClient := Grain.NewGrainClient(shared.InitGrpcClientConn(GrainServiceAddr))
 
 		grpcServer := grpc.NewServer()
-
-		grainClient := Grain.NewGrainClient(shared.InitGrpcClientConn(os.Getenv(GrainServicePortEnv)))
 		Flour.RegisterFlourServer(grpcServer, NewFlourServer(logger, grainClient))
 
 		go func() {
@@ -160,13 +160,12 @@ func main() {
 		mux.HandleFunc("/", Produce)
 
 		// Start HTTP Server
-		port := os.Getenv(ServicePortEnv)
-		logger.Info(port)
-		err := http.ListenAndServe(":"+port, mux)
+		logger.Info("Running at %s\n", ServicePort)
+		err := http.ListenAndServe(":"+ServicePort, mux)
 
 		if err != nil {
 			panic(err)
 		}
-		logger.Infof("service running on port %s\n", port)
+		logger.Infof("service running on port %s\n", ServicePort)
 	}
 }

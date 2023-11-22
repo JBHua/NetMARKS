@@ -20,8 +20,6 @@ COPY --from=stage1 /fish .
 
 EXPOSE 8080
 
-ENV SERVICE_PORT=8080
-ENV CONSTANT_LATENCY=50
 ENV USE_GRPC=false
 
 CMD ["./fish"]

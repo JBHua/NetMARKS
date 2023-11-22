@@ -114,7 +114,7 @@ func InitGrpcClientConn(targetAddr string) *grpc.ClientConn {
 	var conn *grpc.ClientConn
 	var err error
 
-	conn, err = grpc.Dial("localhost:"+targetAddr, opts...)
+	conn, err = grpc.Dial(targetAddr, opts...)
 	if err != nil {
 		panic(err)
 	}

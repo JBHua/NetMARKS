@@ -5,7 +5,7 @@ metadata:
   labels:
     app: netmarks-fish
 spec:
-  replicas: 10
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-fish
@@ -16,7 +16,30 @@ spec:
     spec:
       containers:
         - name: netmarks-fish
-          image: fish:0.1.7
+          image: fish:0.2.0
+          ports:
+            - containerPort: 8080
+      schedulerName: netmark-scheduler
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-grain
+  labels:
+    app: netmarks-grain
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-grain
+  template:
+    metadata:
+      labels:
+        app: netmarks-grain
+    spec:
+      containers:
+        - name: netmarks-grain
+          image: grain:0.2.0
           ports:
             - containerPort: 8080
       schedulerName: netmark-scheduler
@@ -28,7 +51,7 @@ metadata:
   labels:
     app: netmarks-flour
 spec:
-  replicas: 10
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-flour
@@ -39,31 +62,8 @@ spec:
     spec:
       containers:
         - name: netmarks-flour
-          image: flour:0.1.7
+          image: flour:0.2.0
           ports:
              - containerPort: 8080
-      schedulerName: netmark-scheduler
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: netmarks-grain
-  labels:
-    app: netmarks-grain
-spec:
-  replicas: 10
-  selector:
-    matchLabels:
-      app: netmarks-grain
-  template:
-    metadata:
-      labels:
-        app: netmarks-grain
-    spec:
-      containers:
-        - name: netmarks-grain
-          image: grain:0.1.7
-          ports:
-            - containerPort: 8080
       schedulerName: netmark-scheduler
 ---

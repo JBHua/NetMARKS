@@ -18,8 +18,8 @@ import (
 	"time"
 )
 
-var ServiceName = "Fish"
-var ServicePortEnv = "SERVICE_PORT"
+const ServiceName = "Fish"
+const ServicePort = "8080"
 
 // --------------- gRPC Methods ---------------
 
@@ -106,11 +106,11 @@ func main() {
 	useGRPC, _ := strconv.ParseBool(os.Getenv("USE_GRPC"))
 	if useGRPC {
 		logger.Info("Using GRPC")
-		listener, err := net.Listen("tcp", fmt.Sprintf(":%s", os.Getenv(ServicePortEnv)))
+		listener, err := net.Listen("tcp", fmt.Sprintf(":%s", ServicePort))
 		if err != nil {
-			logger.Fatalf("could not attach listener to port: %v. %v", os.Getenv(ServicePortEnv), err)
+			logger.Fatalf("could not attach listener to port: %v. %v", ServicePort, err)
 		}
-		logger.Infof("Running at %s\n", os.Getenv(ServicePortEnv))
+		logger.Infof("Running at %s\n", ServicePort)
 
 		grpcServer := grpc.NewServer()
 		Fish.RegisterFishServer(grpcServer, NewFishServer(logger))
@@ -131,13 +131,12 @@ func main() {
 		http.Handle("/metrics", promhttp.Handler())
 
 		// Start HTTP Server
-		port := os.Getenv(ServicePortEnv)
-		logger.Info(port)
-		err := http.ListenAndServe(":"+port, mux)
+		logger.Info("Running at %s\n", ServicePort)
+		err := http.ListenAndServe(":"+ServicePort, mux)
 
 		if err != nil {
 			panic(err)
 		}
-		logger.Infof("service running on port %s\n", port)
+		logger.Infof("service running on port %s\n", ServicePort)
 	}
 }
