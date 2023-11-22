@@ -25,6 +25,14 @@ build_image() {
   docker build -t "$service:$version" -f "./$service/Dockerfile" .. || { echo "Docker build failed for $service"; exit 1; }
 }
 
+# Function to push local image to minikube
+push_image() {
+  local service=$1
+  local version=$2
+  echo "Pushing image for service: $service, version: $version to minikube"
+  minikube image load "$service":"$version"
+}
+
 # Build all services if the first argument is 'all'
 if [ "$SERVICE_NAME" = "all" ]; then
   # Find all directories in the current directory (assumed to be services/)
@@ -32,11 +40,13 @@ if [ "$SERVICE_NAME" = "all" ]; then
     # Remove the trailing slash to get the service name
     service="${dir%/}"
     build_image "$service" "$VERSION"
+    push_image "$service" "$VERSION"
   done
 else
   # Build the specified service if it is a directory
   if [ -d "$SERVICE_NAME" ]; then
     build_image "$SERVICE_NAME" "$VERSION"
+    push_image "$SERVICE_NAME" "$VERSION"
   else
     echo "Error: Service directory '$SERVICE_NAME' does not exist."
     exit 1

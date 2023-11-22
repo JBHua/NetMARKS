@@ -1,12 +1,11 @@
 package main
 
 import (
-	"NetMARKS/shared"
 	"context"
 	"encoding/json"
 	"fmt"
 	Water "github.com/JBHua/NetMARKS/services/water/proto"
-	"github.com/joho/godotenv"
+	"github.com/JBHua/NetMARKS/shared"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/codes"
 	"google.golang.org/grpc"
@@ -104,11 +103,6 @@ func ProduceFishHTTP(w http.ResponseWriter, r *http.Request) {
 func main() {
 	logger := shared.InitSugaredLogger()
 
-	err := godotenv.Load("../../shared/.env")
-	if err != nil {
-		logger.Fatal("Error loading .env file")
-	}
-
 	shared.ConfigureRuntime()
 
 	useGRPC, _ := strconv.ParseBool(os.Getenv("USE_GRPC"))
@@ -138,7 +132,7 @@ func main() {
 		// Start HTTP Server
 		port := os.Getenv(ServicePortEnv)
 		logger.Info(port)
-		err = http.ListenAndServe(":"+port, mux)
+		err := http.ListenAndServe(":"+port, mux)
 
 		if err != nil {
 			panic(err)

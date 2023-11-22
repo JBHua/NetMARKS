@@ -5,21 +5,13 @@ import (
 	"crypto/rand"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/johnsiilver/getcert"
 	"github.com/joho/godotenv"
 	_ "github.com/microsoft/go-mssqldb"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/resource"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 	"log"
@@ -82,52 +74,6 @@ func LoadEnvFile(additionalEnv string) {
 }
 
 // --------------- Observability-Related Operations ---------------
-
-func InitTracerProvider(debug bool, service string) (*sdktrace.TracerProvider, error) {
-	var secureOption otlptracegrpc.Option
-	var addr string
-
-	if !debug {
-		addr = os.Getenv("OTLP_COLLECTOR_ENDPOINT")
-		// HTTP2 requires us to use https, thus, no more otlptracegrpc.WithInsecure()
-		// https://kennethjenkins.net/posts/go-nginx-grpc/
-		tlsCert, _, _ := getcert.FromTLSServer(addr, true)
-		secureOption = otlptracegrpc.WithTLSCredentials(credentials.NewServerTLSFromCert(&tlsCert))
-	} else {
-		addr = os.Getenv("OTLP_COLLECTOR_ENDPOINT_DEBUG")
-		secureOption = otlptracegrpc.WithInsecure()
-	}
-
-	exporter, err := otlptrace.New(
-		context.Background(),
-		otlptracegrpc.NewClient(
-			secureOption,
-			otlptracegrpc.WithEndpoint(addr),
-		),
-	)
-	if err != nil {
-		log.Fatalf("failed to start a trace exporter ")
-		return nil, err
-	}
-
-	appResource, _ := resource.Merge(
-		resource.Default(),
-		resource.NewWithAttributes(
-			semconv.SchemaURL,
-			semconv.ServiceName(os.Getenv(strings.ToUpper(service)+"_SERVICE_NAME")),
-			semconv.ServiceVersionKey.String(os.Getenv(strings.ToUpper(service)+"_SERVICE_VERSION")),
-		),
-	)
-
-	tp := sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(exporter),
-		sdktrace.WithResource(appResource),
-	)
-	otel.SetTracerProvider(tp)
-	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
-
-	return tp, nil
-}
 
 func SetGRPCHeader(ctx *context.Context) {
 	header := metadata.Pairs("Content-Type", "application/grpc")

@@ -4,20 +4,20 @@ FROM golang:1.21.1-alpine3.18 as stage1
 # Set the working directory inside the container
 WORKDIR /app
 
-COPY ./services/echo/go.mod ./
-COPY ./services/echo/go.sum ./
+COPY ./services/flour/go.mod ./
+COPY ./services/flour/go.sum ./
 
 RUN go mod download
 
 COPY . .
 
 # Build the Go application
-RUN go build -o echo ./services/echo/cmd
+RUN go build -o flour ./services/flour/cmd
 
 FROM alpine:3.18
 
-COPY --from=stage1 /app/echo .
+COPY --from=stage1 /app/flour .
 
 EXPOSE 8080
 
-CMD ["./echo"]
+CMD ["./flour"]

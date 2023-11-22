@@ -7,22 +7,30 @@ spec:
     app: netmarks-fish
   ports:
     - protocol: TCP
-      port: 80
+      port: 5010
       targetPort: 8080
-
-#---
-#apiVersion: v1
-#kind: Service
-#metadata:
-#  name: my-service
-#  annotations:
-#    prometheus.io/scrape: 'true'
-#    prometheus.io/path: '/metrics'
-#    prometheus.io/port: '8080'
-#spec:
-#  selector:
-#    app: my-application
-#  ports:
-#    - protocol: TCP
-#      port: 80
-#      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netmarks-flour
+spec:
+  selector:
+    app: netmarks-flour
+  ports:
+    - protocol: TCP
+      port: 5011
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netmarks-grain
+spec:
+  selector:
+    app: netmarks-grain
+  ports:
+    - protocol: TCP
+      port: 5018
+      targetPort: 8080
+---
