@@ -16,10 +16,10 @@ spec:
     spec:
       containers:
         - name: netmarks-fish
-          image: fish:0.2.0
+          image: fish:0.2.1
           ports:
             - containerPort: 8080
-      schedulerName: netmark-scheduler
+#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -39,10 +39,10 @@ spec:
     spec:
       containers:
         - name: netmarks-grain
-          image: grain:0.2.0
+          image: grain:0.2.1
           ports:
             - containerPort: 8080
-      schedulerName: netmark-scheduler
+#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -62,8 +62,8 @@ spec:
     spec:
       containers:
         - name: netmarks-flour
-          image: flour:0.2.0
+          image: flour:0.2.1
           ports:
              - containerPort: 8080
-      schedulerName: netmark-scheduler
+#      schedulerName: netmark-scheduler
 ---

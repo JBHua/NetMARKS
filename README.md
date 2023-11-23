@@ -2,13 +2,36 @@
 
 ## Project Structure
 
-## Setup
+## Setup:
+### Dev Environment
 1. Install Dependencies
-    minikube: https://minikube.sigs.k8s.io/docs/start/
-2. Start Local k8s cluster using minikube
+    - Container manager like Docker, or Podman
+    - minikube: https://minikube.sigs.k8s.io/docs/start/
+    - k8s version: v1.27.4
+2. Configure Minikube
+    - See: https://minikube.sigs.k8s.io/docs/commands/config/
+3. Start Local k8s cluster using minikube
    ```shell
    minikube start --nodes <nodeCount>
    ```
+
+### minikube
+When initializing minikube nodes, only some core dependencies will be installed (dashboard and dns). For the experiment,
+more setup is needed:
+
+1. Istio Service Mesh
+    - https://istio.io/latest/docs/setup/getting-started/ 
+    - Remember to enable Envoy sidecar injection!
+2. Install Prometheus & Grafana (optional) using Istio
+   - https://istio.io/latest/docs/ops/integrations/prometheus/
+   - https://istio.io/latest/docs/ops/integrations/grafana
+4. Enable Scheduler
+    - Custom: See following section
+
+
+### Services
+Use `build-images.sh` under `<rootDir>/services/` to build mock services and push the images to minikube.
+Use `deployment.yaml` under `<rootDir>/infra` to create deployment. Use `services.yaml` under `<rootDir>/infra` to create services
 
 ## Deployment 
 ### Intro

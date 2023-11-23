@@ -61,9 +61,9 @@ func InitSugaredLogger() *otelzap.SugaredLogger {
 }
 
 func ConfigureRuntime() {
-	nuCPU := runtime.NumCPU()
-	runtime.GOMAXPROCS(nuCPU)
-	fmt.Printf("RUNNING WITH %d CPU\n", nuCPU)
+	//nuCPU := runtime.NumCPU()
+	runtime.GOMAXPROCS(4)
+	fmt.Printf("RUNNING WITH %d CPU\n", 4)
 }
 
 func LoadEnvFile(additionalEnv string) {
