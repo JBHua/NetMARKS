@@ -19,6 +19,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strconv"
 	"strings"
 	"syscall"
 )
@@ -163,6 +164,33 @@ const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 func GenerateFakeMetadataInByte(ctx context.Context, sizeInByte uint64) string {
 	InitInternalSpan(ctx)
+
+	bytes := make([]byte, sizeInByte)
+	rand.Read(bytes)
+
+	for i := range bytes {
+		bytes[i] = charset[bytes[i]%byte(len(charset))]
+	}
+
+	// You can convert the random bytes to a string using base64 encoding or any other method you prefer
+	randomString := string(bytes)
+
+	return randomString
+}
+
+func GenerateFakeMetadataString(ctx context.Context, size string) string {
+	InitInternalSpan(ctx)
+
+	sizeInByte, err := strconv.ParseUint(strings.TrimRight(size, "bkm"), 10, 64)
+	if err != nil {
+		sizeInByte = 1
+	}
+
+	if strings.HasSuffix(size, "k") {
+		sizeInByte *= 1024
+	} else if strings.HasSuffix(size, "m") {
+		sizeInByte *= 1024 * 1024
+	}
 
 	bytes := make([]byte, sizeInByte)
 	rand.Read(bytes)

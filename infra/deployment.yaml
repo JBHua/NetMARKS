@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: netmarks-fish
-          image: fish:0.3.2
+          image: fish:0.3.3
           ports:
             - containerPort: 8080
           env:
@@ -50,7 +50,7 @@ spec:
     spec:
       containers:
         - name: netmarks-grain
-          image: grain:0.3.2
+          image: grain:0.3.3
           ports:
             - containerPort: 8080
           env:
@@ -81,7 +81,7 @@ spec:
     spec:
       containers:
         - name: netmarks-flour
-          image: flour:0.3.2
+          image: flour:0.3.3
           ports:
              - containerPort: 8080
           env:

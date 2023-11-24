@@ -91,12 +91,6 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 		quantity = 1
 	}
 
-	var responseSize uint64
-	responseSize, err = strconv.ParseUint(r.URL.Query().Get("response_size"), 10, 64)
-	if err != nil {
-		responseSize = 1
-	}
-
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
 	response := shared.FlourHTTPResponse{
@@ -123,7 +117,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 
 		response.Items = append(response.Items, shared.SingleFour{
 			Id:             shared.GenerateRandomUUID(),
-			RandomMetadata: shared.GenerateFakeMetadataInByte(ctx, responseSize),
+			RandomMetadata: shared.GenerateFakeMetadataString(ctx, r.URL.Query().Get("response_size")),
 			GrainId:        grain.Items[0].Id,
 		})
 
