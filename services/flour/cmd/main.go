@@ -61,7 +61,7 @@ func (s *FlourServer) Produce(ctx context.Context, req *Flour.Request) (*Flour.R
 
 		r.Items = append(r.Items, &Flour.Single{
 			Id:             shared.GenerateRandomUUID(),
-			RandomMetadata: shared.GenerateFakeMetadataInKB(ctx, req.ResponseSize),
+			RandomMetadata: shared.GenerateFakeMetadataInByte(ctx, req.ResponseSize),
 			GrainId:        singleGrain.Items[0].Id,
 		})
 
@@ -123,7 +123,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 
 		response.Items = append(response.Items, shared.SingleFour{
 			Id:             shared.GenerateRandomUUID(),
-			RandomMetadata: shared.GenerateFakeMetadataInKB(ctx, responseSize),
+			RandomMetadata: shared.GenerateFakeMetadataInByte(ctx, responseSize),
 			GrainId:        grain.Items[0].Id,
 		})
 

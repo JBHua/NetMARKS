@@ -54,7 +54,7 @@ func (s *FishServer) Produce(ctx context.Context, req *Fish.Request) (*Fish.Resp
 		r.Quantity += 1
 		r.Items = append(r.Items, &Fish.Single{
 			Id:             shared.GenerateRandomUUID(),
-			RandomMetadata: shared.GenerateFakeMetadataInKB(ctx, req.ResponseSize),
+			RandomMetadata: shared.GenerateFakeMetadataInByte(ctx, req.ResponseSize),
 		})
 
 		time.Sleep(time.Duration(latency) * time.Millisecond)
@@ -98,7 +98,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 		response.Quantity += 1
 		response.Items = append(response.Items, shared.SingleBasicType{
 			Id:             shared.GenerateRandomUUID(),
-			RandomMetadata: shared.GenerateFakeMetadataInKB(ctx, responseSize),
+			RandomMetadata: shared.GenerateFakeMetadataInByte(ctx, responseSize),
 		})
 
 		time.Sleep(time.Duration(latency) * time.Millisecond)
@@ -142,7 +142,7 @@ func main() {
 		logger.Info("Using HTTP")
 		mux := http.NewServeMux()
 
-		mux.HandleFunc("/produce", Produce)
+		mux.HandleFunc("/", Produce)
 		mux.Handle("/metrics", promhttp.Handler())
 
 		// Start HTTP Server

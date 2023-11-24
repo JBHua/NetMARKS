@@ -161,10 +161,10 @@ func GenerateRandomUUID() string {
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-func GenerateFakeMetadataInKB(ctx context.Context, sizeInKB uint64) string {
+func GenerateFakeMetadataInByte(ctx context.Context, sizeInByte uint64) string {
 	InitInternalSpan(ctx)
 
-	bytes := make([]byte, sizeInKB*1024)
+	bytes := make([]byte, sizeInByte)
 	rand.Read(bytes)
 
 	for i := range bytes {

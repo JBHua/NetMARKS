@@ -48,7 +48,7 @@ func (s *GrainServer) Produce(ctx context.Context, req *Grain.Request) (*Grain.R
 		r.Quantity += 1
 		r.Items = append(r.Items, &Grain.Single{
 			Id:             shared.GenerateRandomUUID(),
-			RandomMetadata: shared.GenerateFakeMetadataInKB(ctx, req.ResponseSize),
+			RandomMetadata: shared.GenerateFakeMetadataInByte(ctx, req.ResponseSize),
 		})
 
 		time.Sleep(time.Duration(latency) * time.Millisecond)
@@ -92,7 +92,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 		response.Quantity += 1
 		response.Items = append(response.Items, shared.SingleBasicType{
 			Id:             shared.GenerateRandomUUID(),
-			RandomMetadata: shared.GenerateFakeMetadataInKB(ctx, responseSize),
+			RandomMetadata: shared.GenerateFakeMetadataInByte(ctx, responseSize),
 		})
 
 		time.Sleep(time.Duration(latency) * time.Millisecond)
