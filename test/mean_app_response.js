@@ -9,16 +9,16 @@ export const options = {
     },
     // Ramp the number of virtual users up and down
     stages: [
-        { duration: "45s", target: 300 },
+        { duration: "60s", target: 10 },
     ],
 };
 
 // Simulated user behavior
 export default function () {
     let base_url = "http://127.0.0.1:61127/"
-    let res = http.get(`${base_url}?quantity=1&response_size=1`);
+    let res = http.get(`${base_url}?quantity=${__ENV.Q}&response_size=${__ENV.RES}`);
 
     // Validate response status
     check(res, { "status was 200": (r) => r.status === 200 });
-    sleep(0.5);
+    sleep(1);
 }
