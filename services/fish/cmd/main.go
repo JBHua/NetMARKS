@@ -6,7 +6,8 @@ import (
 	"fmt"
 	Fish "github.com/JBHua/NetMARKS/services/fish/proto"
 	"github.com/JBHua/NetMARKS/shared"
-	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	grpcPrometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/codes"
@@ -20,6 +21,9 @@ import (
 
 const ServiceName = "Fish"
 const ServicePort = "8080"
+
+var NodeName = os.Getenv("K8S_NODE_NAME")
+var RequestCount = shared.InitPrometheusRequestCountMetrics()
 
 // --------------- gRPC Methods ---------------
 
@@ -38,6 +42,10 @@ func (s *FishServer) Produce(ctx context.Context, req *Fish.Request) (*Fish.Resp
 	shared.SetGRPCHeader(&ctx)
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
 	defer span.End()
+	defer RequestCount.With(prometheus.Labels{
+		"service_name": ServiceName,
+		"node_name":    NodeName,
+	}).Inc()
 
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
@@ -61,7 +69,10 @@ func (s *FishServer) Produce(ctx context.Context, req *Fish.Request) (*Fish.Resp
 func Produce(w http.ResponseWriter, r *http.Request) {
 	ctx, span := shared.InitServerSpan(context.Background(), ServiceName)
 	defer span.End()
-
+	defer RequestCount.With(prometheus.Labels{
+		"service_name": ServiceName,
+		"node_name":    NodeName,
+	}).Inc()
 	r.WithContext(ctx)
 	w.Header().Set("Content-Type", "application/json")
 
@@ -103,6 +114,8 @@ func main() {
 
 	shared.ConfigureRuntime()
 
+	prometheus.MustRegister(RequestCount)
+
 	useGRPC, _ := strconv.ParseBool(os.Getenv("USE_GRPC"))
 	if useGRPC {
 		logger.Info("Using GRPC")
@@ -115,7 +128,7 @@ func main() {
 		grpcServer := grpc.NewServer()
 		Fish.RegisterFishServer(grpcServer, NewFishServer(logger))
 
-		grpc_prometheus.Register(grpcServer)
+		grpcPrometheus.Register(grpcServer)
 
 		go func() {
 			if err := grpcServer.Serve(listener); err != nil {
@@ -127,8 +140,9 @@ func main() {
 	} else {
 		logger.Info("Using HTTP")
 		mux := http.NewServeMux()
-		mux.HandleFunc("/", Produce)
-		http.Handle("/metrics", promhttp.Handler())
+
+		mux.HandleFunc("/produce", Produce)
+		mux.Handle("/metrics", promhttp.Handler())
 
 		// Start HTTP Server
 		logger.Info("Running at %s\n", ServicePort)

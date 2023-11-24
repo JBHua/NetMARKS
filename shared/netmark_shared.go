@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	_ "github.com/microsoft/go-mssqldb"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -105,7 +106,37 @@ func InitInternalSpan(ctx context.Context) (context.Context, trace.Span) {
 	return otel.Tracer("").Start(ctx, getCallFuncName())
 }
 
-// --------------- Shared Data Structure ---------------
+// --------------- Prometheus Metrics ---------------
+
+func InitPrometheusRequestCountMetrics() *prometheus.CounterVec {
+	var (
+		RequestCount = prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "request_to_node_count",
+				Help: "Count the number of incoming requests to the particular node",
+			},
+			[]string{"service_name", "node_name"}, // Labels for the metric, if any
+		)
+	)
+
+	//var (
+	//	OutgoingRequestCount = prometheus.NewCounterVec(
+	//		prometheus.CounterOpts{
+	//			Name: "outgoing_request_to_node_count",
+	//			Help: "Count the number of outgoing requests to the particular node",
+	//		},
+	//		[]string{"serviceName", "nodeName"},
+	//	)
+	//)
+
+	return RequestCount
+}
+
+func IncreaseRequestCount(nodeName string, serviceName string, vec *prometheus.CounterVec) {
+
+}
+
+// --------------- gRPC Related ---------------
 
 func InitGrpcClientConn(targetAddr string) *grpc.ClientConn {
 	var opts []grpc.DialOption

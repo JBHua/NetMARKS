@@ -16,9 +16,14 @@ spec:
     spec:
       containers:
         - name: netmarks-fish
-          image: fish:0.2.1
+          image: fish:0.2.9
           ports:
             - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
 #      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
