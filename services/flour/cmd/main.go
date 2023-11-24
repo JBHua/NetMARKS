@@ -7,6 +7,7 @@ import (
 	Flour "github.com/JBHua/NetMARKS/services/flour/proto"
 	Grain "github.com/JBHua/NetMARKS/services/grain/proto"
 	"github.com/JBHua/NetMARKS/shared"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/codes"
 	"google.golang.org/grpc"
@@ -20,6 +21,9 @@ import (
 const ServiceName = "Flour"
 const ServicePort = "8080"
 const GrainServiceAddr = "netmarks-grain.default.svc.cluster.local:5018"
+
+var NodeName = os.Getenv("K8S_NODE_NAME")
+var RequestCount = shared.InitPrometheusRequestCountMetrics()
 
 // --------------- gRPC Methods ---------------
 
@@ -73,6 +77,10 @@ func (s *FlourServer) Produce(ctx context.Context, req *Flour.Request) (*Flour.R
 func Produce(w http.ResponseWriter, r *http.Request) {
 	ctx, span := shared.InitServerSpan(context.Background(), ServiceName)
 	defer span.End()
+	defer RequestCount.With(prometheus.Labels{
+		"service_name": ServiceName,
+		"node_name":    NodeName,
+	}).Inc()
 
 	r.WithContext(ctx)
 	w.Header().Set("Content-Type", "application/json")
@@ -132,6 +140,8 @@ func main() {
 	logger := shared.InitSugaredLogger()
 
 	shared.ConfigureRuntime()
+
+	prometheus.MustRegister(RequestCount)
 
 	useGRPC, _ := strconv.ParseBool(os.Getenv("USE_GRPC"))
 	if useGRPC {

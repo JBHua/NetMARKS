@@ -73,6 +73,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 		"service_name": ServiceName,
 		"node_name":    NodeName,
 	}).Inc()
+
 	r.WithContext(ctx)
 	w.Header().Set("Content-Type", "application/json")
 
