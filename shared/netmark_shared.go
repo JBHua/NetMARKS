@@ -279,3 +279,15 @@ type PigHTTPResponse struct {
 	Type     string      `json:"type,omitempty"`
 	Items    []SinglePig `json:"items,omitempty"`
 }
+
+type SingleBoat struct {
+	Id             string `json:"id,omitempty"`
+	RandomMetadata string `json:"randomMetadata,omitempty"`
+	BoardId        string `json:"boardId,omitempty"`
+}
+
+type BoatHTTPResponse struct {
+	Quantity uint64       `json:"quantity,omitempty"`
+	Type     string       `json:"type,omitempty"`
+	Items    []SingleBoat `json:"items,omitempty"`
+}

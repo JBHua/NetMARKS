@@ -12,6 +12,7 @@ use (
 	services/board
 	services/beer
 	services/pig
+	services/boat
 
 	netmark-scheduler
 )
