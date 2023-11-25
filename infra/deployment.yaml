@@ -463,3 +463,34 @@ spec:
                   fieldPath: spec.nodeName
 #      schedulerName: netmark-scheduler
 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-coin
+  labels:
+    app: netmarks-coin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-coin
+  template:
+    metadata:
+      labels:
+        app: netmarks-coin
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      containers:
+        - name: netmarks-coin
+          image: coin:0.4.1
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+#      schedulerName: netmark-scheduler
+---

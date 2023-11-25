@@ -2,8 +2,10 @@ package shared
 
 import (
 	Bread "NetMARKS/services/bread/proto"
+	Coal "NetMARKS/services/coal/proto"
 	Fish "NetMARKS/services/fish/proto"
 	Flour "NetMARKS/services/flour/proto"
+	Gold "NetMARKS/services/gold/proto"
 	Grain "NetMARKS/services/grain/proto"
 	Meat "NetMARKS/services/meat/proto"
 	Water "NetMARKS/services/water/proto"
@@ -187,6 +189,38 @@ func ConcurrentGRPCMeat(ctx context.Context, client Meat.MeatClient, wg *sync.Wa
 	defer wg.Done()
 
 	produce, err := client.Produce(ctx, &Meat.Request{
+		Quantity:     1,
+		ResponseSize: "1",
+	})
+	if err != nil {
+		ch <- GRPCResponse{Type: t, Err: err}
+		return
+	}
+
+	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
+}
+
+func ConcurrentGRPCCoal(ctx context.Context, client Coal.CoalClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
+	t := "coal"
+	defer wg.Done()
+
+	produce, err := client.Produce(ctx, &Coal.Request{
+		Quantity:     1,
+		ResponseSize: "1",
+	})
+	if err != nil {
+		ch <- GRPCResponse{Type: t, Err: err}
+		return
+	}
+
+	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
+}
+
+func ConcurrentGRPCGold(ctx context.Context, client Gold.GoldClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
+	t := "gold"
+	defer wg.Done()
+
+	produce, err := client.Produce(ctx, &Gold.Request{
 		Quantity:     1,
 		ResponseSize: "1",
 	})
@@ -397,4 +431,17 @@ type CoalHTTPResponse struct {
 	Quantity uint64       `json:"quantity,omitempty"`
 	Type     string       `json:"type,omitempty"`
 	Items    []SingleCoal `json:"items,omitempty"`
+}
+
+type SingleCoin struct {
+	Id             string `json:"id,omitempty"`
+	RandomMetadata string `json:"randomMetadata,omitempty"`
+	CoalId         string `json:"coalId,omitempty"`
+	GoldId         string `json:"goldId,omitempty"`
+}
+
+type CoinHTTPResponse struct {
+	Quantity uint64       `json:"quantity,omitempty"`
+	Type     string       `json:"type,omitempty"`
+	Items    []SingleCoin `json:"items,omitempty"`
 }
