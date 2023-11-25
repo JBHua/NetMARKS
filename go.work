@@ -16,6 +16,7 @@ use (
 	services/meat
 	services/bread
 	services/coal
+	services/gold
 
 	netmark-scheduler
 )
