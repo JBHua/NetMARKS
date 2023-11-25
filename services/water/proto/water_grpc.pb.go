@@ -35,7 +35,7 @@ func NewWaterClient(cc grpc.ClientConnInterface) WaterClient {
 
 func (c *waterClient) Produce(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
-	err := c.cc.Invoke(ctx, "/netmarks_grain.Water/Produce", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/netmarks_water.Water/Produce", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func _Water_Produce_Handler(srv interface{}, ctx context.Context, dec func(inter
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/netmarks_grain.Water/Produce",
+		FullMethod: "/netmarks_water.Water/Produce",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(WaterServer).Produce(ctx, req.(*Request))
@@ -92,7 +92,7 @@ func _Water_Produce_Handler(srv interface{}, ctx context.Context, dec func(inter
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Water_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "netmarks_grain.Water",
+	ServiceName: "netmarks_water.Water",
 	HandlerType: (*WaterServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

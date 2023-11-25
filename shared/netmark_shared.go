@@ -1,11 +1,12 @@
 package shared
 
 import (
+	Grain "NetMARKS/services/grain/proto"
+	Water "NetMARKS/services/water/proto"
 	"context"
 	"crypto/rand"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/joho/godotenv"
 	_ "github.com/microsoft/go-mssqldb"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
@@ -15,40 +16,17 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
+	"io"
 	"log"
+	"net/http"
 	"os"
-	"os/signal"
 	"runtime"
 	"strconv"
 	"strings"
-	"syscall"
+	"sync"
 )
 
 // --------------- Application-Related Operations ---------------
-
-func MonitorShutdownSignal() {
-	println("Monitoring shutdown signal")
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(
-		signalChan,
-		syscall.SIGTERM, // https://cloud.google.com/blog/topics/developers-practitioners/graceful-shutdowns-cloud-run-deep-dive
-		syscall.SIGHUP,  // kill -SIGHUP
-		syscall.SIGINT,  // kill -SIGINT or Ctrl+c
-		syscall.SIGQUIT, // kill -SIGQUIT
-	)
-
-	<-signalChan
-	log.Printf("os.Interrupt - shutting down...\n")
-
-	// terminate after second signal before callback is done
-	go func() {
-		<-signalChan
-		log.Printf("os.Kill - terminating...\n")
-	}()
-
-	// PERFORM GRACEFUL SHUTDOWN HERE
-	os.Exit(0)
-}
 
 func InitSugaredLogger() *otelzap.SugaredLogger {
 	logger, err := zap.NewProduction()
@@ -66,13 +44,6 @@ func ConfigureRuntime() {
 	//nuCPU := runtime.NumCPU()
 	runtime.GOMAXPROCS(2)
 	fmt.Printf("RUNNING WITH %d CPU\n", 4)
-}
-
-func LoadEnvFile(additionalEnv string) {
-	err := godotenv.Load("./shared_env", additionalEnv)
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
 }
 
 // --------------- Observability-Related Operations ---------------
@@ -110,34 +81,54 @@ func InitInternalSpan(ctx context.Context) (context.Context, trace.Span) {
 // --------------- Prometheus Metrics ---------------
 
 func InitPrometheusRequestCountMetrics() *prometheus.CounterVec {
-	var (
-		RequestCount = prometheus.NewCounterVec(
-			prometheus.CounterOpts{
-				Name: "request_to_node_count",
-				Help: "Count the number of incoming requests to the particular node",
-			},
-			[]string{"service_name", "node_name"}, // Labels for the metric, if any
-		)
+	return prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "request_to_node_count",
+			Help: "Count the number of incoming requests to the particular node",
+		},
+		[]string{"service_name", "node_name"}, // Labels for the metric, if any
 	)
-
-	//var (
-	//	OutgoingRequestCount = prometheus.NewCounterVec(
-	//		prometheus.CounterOpts{
-	//			Name: "outgoing_request_to_node_count",
-	//			Help: "Count the number of outgoing requests to the particular node",
-	//		},
-	//		[]string{"serviceName", "nodeName"},
-	//	)
-	//)
-
-	return RequestCount
-}
-
-func IncreaseRequestCount(nodeName string, serviceName string, vec *prometheus.CounterVec) {
-
 }
 
 // --------------- gRPC Related ---------------
+
+type ConcurrentGRPCResponse struct {
+	Type string
+	Body string
+	Err  error
+}
+
+func ConcurrentGRPCWater(ctx context.Context, client Water.WaterClient, wg *sync.WaitGroup, ch chan<- ConcurrentGRPCResponse) {
+	t := "water"
+	defer wg.Done()
+
+	produce, err := client.Produce(ctx, &Water.Request{
+		Quantity:     1,
+		ResponseSize: "1",
+	})
+	if err != nil {
+		ch <- ConcurrentGRPCResponse{Type: t, Err: err}
+		return
+	}
+
+	ch <- ConcurrentGRPCResponse{Type: t, Body: produce.Items[0].Id}
+}
+
+func ConcurrentGRPCGrain(ctx context.Context, client Grain.GrainClient, wg *sync.WaitGroup, ch chan<- ConcurrentGRPCResponse) {
+	t := "grain"
+	defer wg.Done()
+
+	produce, err := client.Produce(ctx, &Grain.Request{
+		Quantity:     1,
+		ResponseSize: "1",
+	})
+	if err != nil {
+		ch <- ConcurrentGRPCResponse{Type: t, Err: err}
+		return
+	}
+
+	ch <- ConcurrentGRPCResponse{Type: t, Body: produce.Items[0].Id}
+}
 
 func InitGrpcClientConn(targetAddr string) *grpc.ClientConn {
 	var opts []grpc.DialOption
@@ -152,6 +143,33 @@ func InitGrpcClientConn(targetAddr string) *grpc.ClientConn {
 	}
 
 	return conn
+}
+
+// --------------- HTTP Related ---------------
+
+type HTTPResponse struct {
+	Type string
+	Body []byte
+	Err  error
+}
+
+func ConcurrentHTTPRequest(url string, productType string, wg *sync.WaitGroup, ch chan<- HTTPResponse) {
+	defer wg.Done()
+
+	resp, err := http.Get(url)
+	if err != nil {
+		ch <- HTTPResponse{Type: productType, Err: err}
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		ch <- HTTPResponse{Type: productType, Err: err}
+		return
+	}
+
+	ch <- HTTPResponse{Type: productType, Body: body}
 }
 
 // --------------- Shared Data Structure ---------------
@@ -190,48 +208,61 @@ func GenerateFakeMetadataString(ctx context.Context, size string) string {
 }
 
 type SingleBasicType struct {
-	Id             string
-	RandomMetadata string
+	Id             string `json:"id,omitempty"`
+	RandomMetadata string `json:"randomMetadata,omitempty"`
 }
 
 type BasicTypeHTTPResponse struct {
-	Quantity uint64
-	Type     string
-	Items    []SingleBasicType
+	Quantity uint64            `json:"quantity,omitempty"`
+	Type     string            `json:"type,omitempty"`
+	Items    []SingleBasicType `json:"items,omitempty"`
 }
 
 type SingleFour struct {
-	Id             string
-	RandomMetadata string
-	GrainId        string
+	Id             string `json:"id,omitempty"`
+	RandomMetadata string `json:"randomMetadata,omitempty"`
+	GrainId        string `json:"grainId,omitempty"`
 }
 
 type FlourHTTPResponse struct {
-	Quantity uint64
-	Type     string
-	Items    []SingleFour
+	Quantity uint64       `json:"quantity,omitempty"`
+	Type     string       `json:"type,omitempty"`
+	Items    []SingleFour `json:"items,omitempty"`
 }
 
 type SingleLog struct {
-	Id             string
-	RandomMetadata string
-	TreeId         string
+	Id             string `json:"id,omitempty"`
+	RandomMetadata string `json:"randomMetadata,omitempty"`
+	TreeId         string `json:"treeId,omitempty"`
 }
 
 type LogHTTPResponse struct {
-	Quantity uint64
-	Type     string
-	Items    []SingleLog
+	Quantity uint64      `json:"quantity,omitempty"`
+	Type     string      `json:"type,omitempty"`
+	Items    []SingleLog `json:"items,omitempty"`
 }
 
 type SingleBoard struct {
-	Id             string
-	RandomMetadata string
-	LogId          string
+	Id             string `json:"id,omitempty"`
+	RandomMetadata string `json:"randomMetadata,omitempty"`
+	LogId          string `json:"logId,omitempty"`
 }
 
 type BoardHTTPResponse struct {
-	Quantity uint64
-	Type     string
-	Items    []SingleBoard
+	Quantity uint64        `json:"quantity,omitempty"`
+	Type     string        `json:"type,omitempty"`
+	Items    []SingleBoard `json:"items,omitempty"`
+}
+
+type SingleBeer struct {
+	Id             string `json:"id,omitempty"`
+	RandomMetadata string `json:"randomMetadata,omitempty"`
+	GrainId        string `json:"grainId,omitempty"`
+	WaterId        string `json:"waterId,omitempty"`
+}
+
+type BeerHTTPResponse struct {
+	Quantity uint64       `json:"quantity,omitempty"`
+	Type     string       `json:"type,omitempty"`
+	Items    []SingleBeer `json:"items,omitempty"`
 }

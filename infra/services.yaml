@@ -82,3 +82,15 @@ spec:
       port: 8080
       targetPort: 8080
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netmarks-beer
+spec:
+  selector:
+    app: netmarks-beer
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---

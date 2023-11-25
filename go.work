@@ -10,6 +10,7 @@ use (
 	services/flour
 	services/log
 	services/board
+	services/beer
 
 	netmark-scheduler
 )
