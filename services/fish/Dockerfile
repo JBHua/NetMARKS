@@ -20,6 +20,4 @@ COPY --from=stage1 /fish .
 
 EXPOSE 8080
 
-ENV USE_GRPC=false
-
 CMD ["./fish"]

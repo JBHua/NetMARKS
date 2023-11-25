@@ -162,22 +162,6 @@ func GenerateRandomUUID() string {
 
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-func GenerateFakeMetadataInByte(ctx context.Context, sizeInByte uint64) string {
-	InitInternalSpan(ctx)
-
-	bytes := make([]byte, sizeInByte)
-	rand.Read(bytes)
-
-	for i := range bytes {
-		bytes[i] = charset[bytes[i]%byte(len(charset))]
-	}
-
-	// You can convert the random bytes to a string using base64 encoding or any other method you prefer
-	randomString := string(bytes)
-
-	return randomString
-}
-
 func GenerateFakeMetadataString(ctx context.Context, size string) string {
 	InitInternalSpan(ctx)
 

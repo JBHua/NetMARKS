@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package  netmarks_flour;
 
-option go_package = "github.com/JBHua/NetMARKS/services/flour/proto";
+option go_package = "NetMARKS/services/flour/proto";
 
 service Flour {
   rpc Produce(Request) returns (Response) {}
@@ -10,7 +10,7 @@ service Flour {
 
 message Request {
   uint64 quantity = 1;
-  uint64 response_size = 2;
+  string response_size = 2;
 }
 
 message Response {

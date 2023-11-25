@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package  netmarks_grain;
 
-option go_package = "github.com/JBHua/NetMARKS/services/water/proto";
+option go_package = "NetMARKS/services/water/proto";
 
 service Water {
   rpc Produce(Request) returns (Response) {}
@@ -10,7 +10,7 @@ service Water {
 
 message Request {
   uint64 quantity = 1;
-  uint64 response_size = 2;
+  string response_size = 2;
 }
 
 message Response {

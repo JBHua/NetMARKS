@@ -1,15 +1,20 @@
 package main
 
 import (
+	Water "NetMARKS/services/water/proto"
+	"NetMARKS/shared"
 	"context"
 	"encoding/json"
 	"fmt"
-	Water "github.com/JBHua/NetMARKS/services/water/proto"
-	"github.com/JBHua/NetMARKS/shared"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/soheilhy/cmux"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/codes"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -17,8 +22,8 @@ import (
 	"time"
 )
 
-var ServiceName = "Water"
-var ServicePortEnv = "WATER_SERVICE_PORT"
+const ServiceName = "Water"
+const ServicePort = "8080"
 
 var NodeName = os.Getenv("K8S_NODE_NAME")
 var RequestCount = shared.InitPrometheusRequestCountMetrics()
@@ -36,6 +41,15 @@ func NewWaterServer(l *otelzap.SugaredLogger) *WaterServer {
 	}
 }
 
+func newGRPCServer(lis net.Listener, logger *otelzap.SugaredLogger) error {
+	grpcServer := grpc.NewServer()
+	reflection.Register(grpcServer)
+
+	Water.RegisterWaterServer(grpcServer, NewWaterServer(logger))
+
+	return grpcServer.Serve(lis)
+}
+
 func (s *WaterServer) Produce(ctx context.Context, req *Water.Request) (*Water.Response, error) {
 	shared.SetGRPCHeader(&ctx)
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
@@ -48,7 +62,7 @@ func (s *WaterServer) Produce(ctx context.Context, req *Water.Request) (*Water.R
 		r.Quantity += 1
 		r.Items = append(r.Items, &Water.Single{
 			Id:             shared.GenerateRandomUUID(),
-			RandomMetadata: shared.GenerateFakeMetadataInByte(ctx, req.ResponseSize),
+			RandomMetadata: shared.GenerateFakeMetadataString(ctx, req.ResponseSize),
 		})
 
 		time.Sleep(time.Duration(latency) * time.Millisecond)
@@ -59,6 +73,16 @@ func (s *WaterServer) Produce(ctx context.Context, req *Water.Request) (*Water.R
 }
 
 // --------------- HTTP Methods ---------------
+
+func newHTTPServer(lis net.Listener) error {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/", Produce)
+	mux.Handle("/metrics", promhttp.Handler())
+
+	s := &http.Server{Handler: mux}
+	return s.Serve(lis)
+}
 
 func Produce(w http.ResponseWriter, r *http.Request) {
 	ctx, span := shared.InitServerSpan(context.Background(), ServiceName)
@@ -104,43 +128,23 @@ func ProduceFishHTTP(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	logger := shared.InitSugaredLogger()
-
 	shared.ConfigureRuntime()
-
 	prometheus.MustRegister(RequestCount)
 
-	useGRPC, _ := strconv.ParseBool(os.Getenv("USE_GRPC"))
-	if useGRPC {
-		logger.Info("Using GRPC")
-		listener, err := net.Listen("tcp", fmt.Sprintf(":%s", os.Getenv(ServicePortEnv)))
-		if err != nil {
-			logger.Fatalf("could not attach listener to port: %v. %v", os.Getenv(ServicePortEnv), err)
-		}
-		logger.Infof("Running at %s\n", os.Getenv(ServicePortEnv))
-
-		grpcServer := grpc.NewServer()
-		Water.RegisterWaterServer(grpcServer, NewWaterServer(logger))
-
-		go func() {
-			if err := grpcServer.Serve(listener); err != nil {
-				logger.Fatalf("could not start grpc server: %v", err)
-			}
-		}()
-
-		shared.MonitorShutdownSignal()
-	} else {
-		logger.Info("Using HTTP")
-		mux := http.NewServeMux()
-		mux.HandleFunc("/", Produce)
-
-		// Start HTTP Server
-		port := os.Getenv(ServicePortEnv)
-		logger.Info(port)
-		err := http.ListenAndServe(":"+port, mux)
-
-		if err != nil {
-			panic(err)
-		}
-		logger.Infof("service running on port %s\n", port)
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", ServicePort))
+	if err != nil {
+		logger.Fatalf("could not attach listener to port: %v. %v", ServicePort, err)
 	}
+
+	mux := cmux.New(listener)
+	grpcListener := mux.Match(cmux.HTTP2HeaderField("content-type", "application/grpc"))
+	httpListener := mux.Match(cmux.HTTP1Fast())
+
+	// Use an error group to start all of them
+	g := errgroup.Group{}
+	g.Go(func() error { return newGRPCServer(grpcListener, logger) })
+	g.Go(func() error { return newHTTPServer(httpListener) })
+	g.Go(func() error { return mux.Serve() })
+
+	log.Println("run server:", g.Wait())
 }

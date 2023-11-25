@@ -1,4 +1,4 @@
-module github.com/JBHua/NetMARKS/shared
+module NetMARKS/shared
 
 go 1.21
 

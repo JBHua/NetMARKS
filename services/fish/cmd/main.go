@@ -1,17 +1,20 @@
 package main
 
 import (
+	Fish "NetMARKS/services/fish/proto"
+	"NetMARKS/shared"
 	"context"
 	"encoding/json"
 	"fmt"
-	Fish "github.com/JBHua/NetMARKS/services/fish/proto"
-	"github.com/JBHua/NetMARKS/shared"
-	grpcPrometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/soheilhy/cmux"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/codes"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -38,6 +41,15 @@ func NewFishServer(l *otelzap.SugaredLogger) *FishServer {
 	}
 }
 
+func newGRPCServer(lis net.Listener, logger *otelzap.SugaredLogger) error {
+	grpcServer := grpc.NewServer()
+
+	Fish.RegisterFishServer(grpcServer, NewFishServer(logger))
+	reflection.Register(grpcServer)
+
+	return grpcServer.Serve(lis)
+}
+
 func (s *FishServer) Produce(ctx context.Context, req *Fish.Request) (*Fish.Response, error) {
 	shared.SetGRPCHeader(&ctx)
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
@@ -54,7 +66,7 @@ func (s *FishServer) Produce(ctx context.Context, req *Fish.Request) (*Fish.Resp
 		r.Quantity += 1
 		r.Items = append(r.Items, &Fish.Single{
 			Id:             shared.GenerateRandomUUID(),
-			RandomMetadata: shared.GenerateFakeMetadataInByte(ctx, req.ResponseSize),
+			RandomMetadata: shared.GenerateFakeMetadataString(ctx, req.ResponseSize),
 		})
 
 		time.Sleep(time.Duration(latency) * time.Millisecond)
@@ -65,6 +77,16 @@ func (s *FishServer) Produce(ctx context.Context, req *Fish.Request) (*Fish.Resp
 }
 
 // --------------- HTTP Methods ---------------
+
+func newHTTPServer(lis net.Listener) error {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/", Produce)
+	mux.Handle("/metrics", promhttp.Handler())
+
+	s := &http.Server{Handler: mux}
+	return s.Serve(lis)
+}
 
 func Produce(w http.ResponseWriter, r *http.Request) {
 	ctx, span := shared.InitServerSpan(context.Background(), ServiceName)
@@ -106,46 +128,23 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	logger := shared.InitSugaredLogger()
-
 	shared.ConfigureRuntime()
-
 	prometheus.MustRegister(RequestCount)
 
-	useGRPC, _ := strconv.ParseBool(os.Getenv("USE_GRPC"))
-	if useGRPC {
-		logger.Info("Using GRPC")
-		listener, err := net.Listen("tcp", fmt.Sprintf(":%s", ServicePort))
-		if err != nil {
-			logger.Fatalf("could not attach listener to port: %v. %v", ServicePort, err)
-		}
-		logger.Infof("Running at %s\n", ServicePort)
-
-		grpcServer := grpc.NewServer()
-		Fish.RegisterFishServer(grpcServer, NewFishServer(logger))
-
-		grpcPrometheus.Register(grpcServer)
-
-		go func() {
-			if err := grpcServer.Serve(listener); err != nil {
-				logger.Fatalf("could not start grpc server: %v", err)
-			}
-		}()
-
-		shared.MonitorShutdownSignal()
-	} else {
-		logger.Info("Using HTTP")
-		mux := http.NewServeMux()
-
-		mux.HandleFunc("/", Produce)
-		mux.Handle("/metrics", promhttp.Handler())
-
-		// Start HTTP Server
-		logger.Info("Running at %s\n", ServicePort)
-		err := http.ListenAndServe(":"+ServicePort, mux)
-
-		if err != nil {
-			panic(err)
-		}
-		logger.Infof("service running on port %s\n", ServicePort)
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", ServicePort))
+	if err != nil {
+		logger.Fatalf("could not attach listener to port: %v. %v", ServicePort, err)
 	}
+
+	mux := cmux.New(listener)
+	grpcListener := mux.Match(cmux.HTTP2HeaderField("content-type", "application/grpc"))
+	httpListener := mux.Match(cmux.HTTP1Fast())
+
+	// Use an error group to start all of them
+	g := errgroup.Group{}
+	g.Go(func() error { return newGRPCServer(grpcListener, logger) })
+	g.Go(func() error { return newHTTPServer(httpListener) })
+	g.Go(func() error { return mux.Serve() })
+
+	log.Println("run server:", g.Wait())
 }

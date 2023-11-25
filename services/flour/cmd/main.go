@@ -1,16 +1,21 @@
 package main
 
 import (
+	Flour "NetMARKS/services/flour/proto"
+	Grain "NetMARKS/services/grain/proto"
+	"NetMARKS/shared"
 	"context"
 	"encoding/json"
 	"fmt"
-	Flour "github.com/JBHua/NetMARKS/services/flour/proto"
-	Grain "github.com/JBHua/NetMARKS/services/grain/proto"
-	"github.com/JBHua/NetMARKS/shared"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/soheilhy/cmux"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/codes"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -40,6 +45,16 @@ func NewFlourServer(l *otelzap.SugaredLogger, c Grain.GrainClient) *FlourServer 
 	}
 }
 
+func newGRPCServer(lis net.Listener, logger *otelzap.SugaredLogger) error {
+	grpcServer := grpc.NewServer()
+	reflection.Register(grpcServer)
+
+	grainClient := Grain.NewGrainClient(shared.InitGrpcClientConn(GrainServiceAddr))
+	Flour.RegisterFlourServer(grpcServer, NewFlourServer(logger, grainClient))
+
+	return grpcServer.Serve(lis)
+}
+
 func (s *FlourServer) Produce(ctx context.Context, req *Flour.Request) (*Flour.Response, error) {
 	shared.SetGRPCHeader(&ctx)
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
@@ -53,7 +68,7 @@ func (s *FlourServer) Produce(ctx context.Context, req *Flour.Request) (*Flour.R
 
 		singleGrain, err := s.grainClient.Produce(ctx, &Grain.Request{
 			Quantity:     1,
-			ResponseSize: 1,
+			ResponseSize: "1",
 		})
 		if err != nil {
 			return nil, err
@@ -61,7 +76,7 @@ func (s *FlourServer) Produce(ctx context.Context, req *Flour.Request) (*Flour.R
 
 		r.Items = append(r.Items, &Flour.Single{
 			Id:             shared.GenerateRandomUUID(),
-			RandomMetadata: shared.GenerateFakeMetadataInByte(ctx, req.ResponseSize),
+			RandomMetadata: shared.GenerateFakeMetadataString(ctx, req.ResponseSize),
 			GrainId:        singleGrain.Items[0].Id,
 		})
 
@@ -73,6 +88,16 @@ func (s *FlourServer) Produce(ctx context.Context, req *Flour.Request) (*Flour.R
 }
 
 // --------------- HTTP Methods ---------------
+
+func newHTTPServer(lis net.Listener) error {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/", Produce)
+	mux.Handle("/metrics", promhttp.Handler())
+
+	s := &http.Server{Handler: mux}
+	return s.Serve(lis)
+}
 
 func Produce(w http.ResponseWriter, r *http.Request) {
 	ctx, span := shared.InitServerSpan(context.Background(), ServiceName)
@@ -132,44 +157,23 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	logger := shared.InitSugaredLogger()
-
 	shared.ConfigureRuntime()
-
 	prometheus.MustRegister(RequestCount)
 
-	useGRPC, _ := strconv.ParseBool(os.Getenv("USE_GRPC"))
-	if useGRPC {
-		logger.Info("Using GRPC")
-		listener, err := net.Listen("tcp", fmt.Sprintf(":%s", ServicePort))
-		if err != nil {
-			logger.Fatalf("could not attach listener to port: %v. %v", ServicePort, err)
-		}
-		logger.Infof("Running at %s\n", ServicePort)
-
-		grainClient := Grain.NewGrainClient(shared.InitGrpcClientConn(GrainServiceAddr))
-
-		grpcServer := grpc.NewServer()
-		Flour.RegisterFlourServer(grpcServer, NewFlourServer(logger, grainClient))
-
-		go func() {
-			if err := grpcServer.Serve(listener); err != nil {
-				logger.Fatalf("could not start grpc server: %v", err)
-			}
-		}()
-
-		shared.MonitorShutdownSignal()
-	} else {
-		logger.Info("Using HTTP")
-		mux := http.NewServeMux()
-		mux.HandleFunc("/", Produce)
-
-		// Start HTTP Server
-		logger.Info("Running at %s\n", ServicePort)
-		err := http.ListenAndServe(":"+ServicePort, mux)
-
-		if err != nil {
-			panic(err)
-		}
-		logger.Infof("service running on port %s\n", ServicePort)
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", ServicePort))
+	if err != nil {
+		logger.Fatalf("could not attach listener to port: %v. %v", ServicePort, err)
 	}
+
+	mux := cmux.New(listener)
+	grpcListener := mux.Match(cmux.HTTP2HeaderField("content-type", "application/grpc"))
+	httpListener := mux.Match(cmux.HTTP1Fast())
+
+	// Use an error group to start all of them
+	g := errgroup.Group{}
+	g.Go(func() error { return newGRPCServer(grpcListener, logger) })
+	g.Go(func() error { return newHTTPServer(httpListener) })
+	g.Go(func() error { return mux.Serve() })
+
+	log.Println("run server:", g.Wait())
 }
