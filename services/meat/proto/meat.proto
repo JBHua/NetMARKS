@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package  netmarks_meat;
+
+option go_package = "NetMARKS/services/meat/proto";
+
+service Meat {
+  rpc Produce(Request) returns (Response) {}
+}
+
+message Request {
+  uint64 quantity = 1;
+  string response_size = 2;
+}
+
+message Response {
+  uint64 quantity = 1;
+  repeated Single items = 2;
+}
+
+message Single {
+  string id = 1;
+  string random_metadata = 2;
+  string pig_id = 3;
+}

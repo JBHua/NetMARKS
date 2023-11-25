@@ -13,6 +13,7 @@ use (
 	services/beer
 	services/pig
 	services/boat
+	services/meat
 
 	netmark-scheduler
 )

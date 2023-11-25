@@ -291,3 +291,15 @@ type BoatHTTPResponse struct {
 	Type     string       `json:"type,omitempty"`
 	Items    []SingleBoat `json:"items,omitempty"`
 }
+
+type SingleMeat struct {
+	Id             string `json:"id,omitempty"`
+	RandomMetadata string `json:"randomMetadata,omitempty"`
+	PigId          string `json:"pigId,omitempty"`
+}
+
+type MeatHTTPResponse struct {
+	Quantity uint64       `json:"quantity,omitempty"`
+	Type     string       `json:"type,omitempty"`
+	Items    []SingleMeat `json:"items,omitempty"`
+}

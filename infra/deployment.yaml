@@ -298,7 +298,7 @@ spec:
     spec:
       containers:
         - name: netmarks-boat
-          image: boat:0.4.0
+          image: boat:0.4.1
           ports:
             - containerPort: 8080
           env:
@@ -308,3 +308,33 @@ spec:
                   fieldPath: spec.nodeName
 #      schedulerName: netmark-scheduler
 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-meat
+  labels:
+    app: netmarks-meat
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: netmarks-meat
+  template:
+    metadata:
+      labels:
+        app: netmarks-meat
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      containers:
+        - name: netmarks-meat
+          image: meat:0.4.1
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+#      schedulerName: netmark-scheduler

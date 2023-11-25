@@ -118,3 +118,15 @@ spec:
       port: 8080
       targetPort: 8080
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netmarks-meat
+spec:
+  selector:
+    app: netmarks-meat
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---

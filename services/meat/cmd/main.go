@@ -1,8 +1,8 @@
 package main
 
 import (
-	Board "NetMARKS/services/board/proto"
-	Boat "NetMARKS/services/boat/proto"
+	Meat "NetMARKS/services/meat/proto"
+	Pig "NetMARKS/services/pig/proto"
 	"NetMARKS/shared"
 	"context"
 	"encoding/json"
@@ -22,23 +22,23 @@ import (
 	"time"
 )
 
-const ServiceName = "Boat"
+const ServiceName = "Meat"
 const ServicePort = "8080"
-const BoardServiceAddr = "netmarks-board.default.svc.cluster.local:8080"
+const PigServiceAddr = "netmarks-pig.default.svc.cluster.local:8080"
 
 var NodeName = os.Getenv("K8S_NODE_NAME")
 var RequestCount = shared.InitPrometheusRequestCountMetrics()
 
 // --------------- gRPC Methods ---------------
 
-type BoatServer struct {
-	Boat.UnimplementedBoatServer
-	boardClient Board.BoardClient
+type MeatServer struct {
+	Meat.UnimplementedMeatServer
+	pigClient Pig.PigClient
 }
 
-func NewBoatServer(b Board.BoardClient) *BoatServer {
-	return &BoatServer{
-		boardClient: b,
+func NewMeatServer(p Pig.PigClient) *MeatServer {
+	return &MeatServer{
+		pigClient: p,
 	}
 }
 
@@ -46,13 +46,13 @@ func newGRPCServer(lis net.Listener) error {
 	grpcServer := grpc.NewServer()
 	reflection.Register(grpcServer)
 
-	boardClient := Board.NewBoardClient(shared.InitGrpcClientConn(BoardServiceAddr))
-	Boat.RegisterBoatServer(grpcServer, NewBoatServer(boardClient))
+	pigClient := Pig.NewPigClient(shared.InitGrpcClientConn(PigServiceAddr))
+	Meat.RegisterMeatServer(grpcServer, NewMeatServer(pigClient))
 
 	return grpcServer.Serve(lis)
 }
 
-func (s *BoatServer) Produce(ctx context.Context, req *Boat.Request) (*Boat.Response, error) {
+func (s *MeatServer) Produce(ctx context.Context, req *Meat.Request) (*Meat.Response, error) {
 	shared.SetGRPCHeader(&ctx)
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
 	defer span.End()
@@ -63,11 +63,11 @@ func (s *BoatServer) Produce(ctx context.Context, req *Boat.Request) (*Boat.Resp
 
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
-	r := Boat.Response{}
+	r := Meat.Response{}
 	for i := uint64(0); i < req.Quantity; i++ {
 		r.Quantity += 1
 
-		singleGrain, err := s.boardClient.Produce(ctx, &Board.Request{
+		produce, err := s.pigClient.Produce(ctx, &Pig.Request{
 			Quantity:     1,
 			ResponseSize: "1",
 		})
@@ -75,10 +75,10 @@ func (s *BoatServer) Produce(ctx context.Context, req *Boat.Request) (*Boat.Resp
 			return nil, err
 		}
 
-		r.Items = append(r.Items, &Boat.Single{
+		r.Items = append(r.Items, &Meat.Single{
 			Id:             shared.GenerateRandomUUID(),
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, req.ResponseSize),
-			BoardId:        singleGrain.Items[0].Id,
+			PigId:          produce.Items[0].Id,
 		})
 
 		time.Sleep(time.Duration(latency) * time.Millisecond)
@@ -119,13 +119,13 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
-	response := shared.BoatHTTPResponse{
+	response := shared.MeatHTTPResponse{
 		Type: ServiceName,
 	}
 	for i := uint64(0); i < quantity; i++ {
 		response.Quantity += 1
 
-		getRes, err := http.Get("http://" + BoardServiceAddr + "?quantity=1&response_size=1")
+		getRes, err := http.Get("http://" + PigServiceAddr + "?quantity=1&response_size=1")
 		if err != nil {
 			w.Write([]byte(err.Error()))
 			w.WriteHeader(http.StatusInternalServerError)
@@ -133,18 +133,18 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 		}
 		defer getRes.Body.Close()
 
-		var board shared.SingleBoard
-		err = json.NewDecoder(getRes.Body).Decode(&board)
+		var pig shared.SinglePig
+		err = json.NewDecoder(getRes.Body).Decode(&pig)
 		if err != nil {
 			w.Write([]byte(err.Error()))
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		response.Items = append(response.Items, shared.SingleBoat{
+		response.Items = append(response.Items, shared.SingleMeat{
 			Id:             shared.GenerateRandomUUID(),
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, r.URL.Query().Get("response_size")),
-			BoardId:        board.Id,
+			PigId:          pig.Id,
 		})
 
 		time.Sleep(time.Duration(latency) * time.Millisecond)
