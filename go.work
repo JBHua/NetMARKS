@@ -14,6 +14,7 @@ use (
 	services/pig
 	services/boat
 	services/meat
+	services/bread
 
 	netmark-scheduler
 )

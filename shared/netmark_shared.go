@@ -1,6 +1,7 @@
 package shared
 
 import (
+	Flour "NetMARKS/services/flour/proto"
 	Grain "NetMARKS/services/grain/proto"
 	Water "NetMARKS/services/water/proto"
 	"context"
@@ -119,6 +120,22 @@ func ConcurrentGRPCGrain(ctx context.Context, client Grain.GrainClient, wg *sync
 	defer wg.Done()
 
 	produce, err := client.Produce(ctx, &Grain.Request{
+		Quantity:     1,
+		ResponseSize: "1",
+	})
+	if err != nil {
+		ch <- GRPCResponse{Type: t, Err: err}
+		return
+	}
+
+	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
+}
+
+func ConcurrentGRPCFlour(ctx context.Context, client Flour.FlourClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
+	t := "grain"
+	defer wg.Done()
+
+	produce, err := client.Produce(ctx, &Flour.Request{
 		Quantity:     1,
 		ResponseSize: "1",
 	})
@@ -302,4 +319,17 @@ type MeatHTTPResponse struct {
 	Quantity uint64       `json:"quantity,omitempty"`
 	Type     string       `json:"type,omitempty"`
 	Items    []SingleMeat `json:"items,omitempty"`
+}
+
+type SingleBread struct {
+	Id             string `json:"id,omitempty"`
+	RandomMetadata string `json:"randomMetadata,omitempty"`
+	WaterId        string `json:"waterId,omitempty"`
+	FlourId        string `json:"flourId,omitempty"`
+}
+
+type BreadHTTPResponse struct {
+	Quantity uint64        `json:"quantity,omitempty"`
+	Type     string        `json:"type,omitempty"`
+	Items    []SingleBread `json:"items,omitempty"`
 }
