@@ -15,6 +15,7 @@ use (
 	services/boat
 	services/meat
 	services/bread
+	services/coal
 
 	netmark-scheduler
 )

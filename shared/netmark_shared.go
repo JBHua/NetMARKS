@@ -1,8 +1,11 @@
 package shared
 
 import (
+	Bread "NetMARKS/services/bread/proto"
+	Fish "NetMARKS/services/fish/proto"
 	Flour "NetMARKS/services/flour/proto"
 	Grain "NetMARKS/services/grain/proto"
+	Meat "NetMARKS/services/meat/proto"
 	Water "NetMARKS/services/water/proto"
 	"context"
 	"crypto/rand"
@@ -132,10 +135,58 @@ func ConcurrentGRPCGrain(ctx context.Context, client Grain.GrainClient, wg *sync
 }
 
 func ConcurrentGRPCFlour(ctx context.Context, client Flour.FlourClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
-	t := "grain"
+	t := "flour"
 	defer wg.Done()
 
 	produce, err := client.Produce(ctx, &Flour.Request{
+		Quantity:     1,
+		ResponseSize: "1",
+	})
+	if err != nil {
+		ch <- GRPCResponse{Type: t, Err: err}
+		return
+	}
+
+	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
+}
+
+func ConcurrentGRPCBread(ctx context.Context, client Bread.BreadClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
+	t := "bread"
+	defer wg.Done()
+
+	produce, err := client.Produce(ctx, &Bread.Request{
+		Quantity:     1,
+		ResponseSize: "1",
+	})
+	if err != nil {
+		ch <- GRPCResponse{Type: t, Err: err}
+		return
+	}
+
+	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
+}
+
+func ConcurrentGRPCFish(ctx context.Context, client Fish.FishClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
+	t := "fish"
+	defer wg.Done()
+
+	produce, err := client.Produce(ctx, &Fish.Request{
+		Quantity:     1,
+		ResponseSize: "1",
+	})
+	if err != nil {
+		ch <- GRPCResponse{Type: t, Err: err}
+		return
+	}
+
+	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
+}
+
+func ConcurrentGRPCMeat(ctx context.Context, client Meat.MeatClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
+	t := "meat"
+	defer wg.Done()
+
+	produce, err := client.Produce(ctx, &Meat.Request{
 		Quantity:     1,
 		ResponseSize: "1",
 	})
@@ -332,4 +383,18 @@ type BreadHTTPResponse struct {
 	Quantity uint64        `json:"quantity,omitempty"`
 	Type     string        `json:"type,omitempty"`
 	Items    []SingleBread `json:"items,omitempty"`
+}
+
+type SingleCoal struct {
+	Id             string `json:"id,omitempty"`
+	RandomMetadata string `json:"randomMetadata,omitempty"`
+	FishId         string `json:"fishId,omitempty"`
+	BreadId        string `json:"breadId,omitempty"`
+	MeatId         string `json:"meatId,omitempty"`
+}
+
+type CoalHTTPResponse struct {
+	Quantity uint64       `json:"quantity,omitempty"`
+	Type     string       `json:"type,omitempty"`
+	Items    []SingleCoal `json:"items,omitempty"`
 }

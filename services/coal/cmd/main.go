@@ -2,8 +2,9 @@ package main
 
 import (
 	Bread "NetMARKS/services/bread/proto"
-	Flour "NetMARKS/services/flour/proto"
-	Water "NetMARKS/services/water/proto"
+	Coal "NetMARKS/services/coal/proto"
+	Fish "NetMARKS/services/fish/proto"
+	Meat "NetMARKS/services/meat/proto"
 	"NetMARKS/shared"
 	"context"
 	"encoding/json"
@@ -24,27 +25,30 @@ import (
 	"time"
 )
 
-const ServiceName = "Bread"
+const ServiceName = "Coal"
 const ServicePort = "8080"
 
-const FlourServiceAddr = "netmarks-flour.default.svc.cluster.local:8080"
-const WaterServiceAddr = "netmarks-water.default.svc.cluster.local:8080"
+const BreadServiceAddr = "netmarks-bread.default.svc.cluster.local:8080"
+const FishServiceAddr = "netmarks-fish.default.svc.cluster.local:8080"
+const MeatServiceAddr = "netmarks-meat.default.svc.cluster.local:8080"
 
 var NodeName = os.Getenv("K8S_NODE_NAME")
 var RequestCount = shared.InitPrometheusRequestCountMetrics()
 
 // --------------- gRPC Methods ---------------
 
-type BreadServer struct {
-	Bread.UnimplementedBreadServer
-	waterClient Water.WaterClient
-	flourClient Flour.FlourClient
+type CoalServer struct {
+	Coal.UnimplementedCoalServer
+	breadClient Bread.BreadClient
+	fishClient  Fish.FishClient
+	meatClient  Meat.MeatClient
 }
 
-func NewBreadServer(w Water.WaterClient, f Flour.FlourClient) *BreadServer {
-	return &BreadServer{
-		waterClient: w,
-		flourClient: f,
+func NewCoalServer(b Bread.BreadClient, f Fish.FishClient, m Meat.MeatClient) *CoalServer {
+	return &CoalServer{
+		breadClient: b,
+		fishClient:  f,
+		meatClient:  m,
 	}
 }
 
@@ -52,14 +56,16 @@ func newGRPCServer(lis net.Listener) error {
 	grpcServer := grpc.NewServer()
 	reflection.Register(grpcServer)
 
-	waterClient := Water.NewWaterClient(shared.InitGrpcClientConn(WaterServiceAddr))
-	flourClient := Flour.NewFlourClient(shared.InitGrpcClientConn(FlourServiceAddr))
-	Bread.RegisterBreadServer(grpcServer, NewBreadServer(waterClient, flourClient))
+	breadClient := Bread.NewBreadClient(shared.InitGrpcClientConn(BreadServiceAddr))
+	fishClient := Fish.NewFishClient(shared.InitGrpcClientConn(FishServiceAddr))
+	meatClient := Meat.NewMeatClient(shared.InitGrpcClientConn(MeatServiceAddr))
+
+	Coal.RegisterCoalServer(grpcServer, NewCoalServer(breadClient, fishClient, meatClient))
 
 	return grpcServer.Serve(lis)
 }
 
-func (s *BreadServer) Produce(ctx context.Context, req *Bread.Request) (*Bread.Response, error) {
+func (s *CoalServer) Produce(ctx context.Context, req *Coal.Request) (*Coal.Response, error) {
 	shared.SetGRPCHeader(&ctx)
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
 	defer span.End()
@@ -71,22 +77,23 @@ func (s *BreadServer) Produce(ctx context.Context, req *Bread.Request) (*Bread.R
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
 
 	ch := make(chan shared.GRPCResponse)
 	var mutex sync.Mutex
 
-	r := Bread.Response{}
+	r := Coal.Response{}
 	for i := uint64(0); i < req.Quantity; i++ {
 		r.Quantity += 1
 
-		product := Bread.Single{
+		product := Coal.Single{
 			Id:             shared.GenerateRandomUUID(),
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, req.ResponseSize),
 		}
 
-		go shared.ConcurrentGRPCWater(ctx, s.waterClient, &wg, ch)
-		go shared.ConcurrentGRPCFlour(ctx, s.flourClient, &wg, ch)
+		go shared.ConcurrentGRPCBread(ctx, s.breadClient, &wg, ch)
+		go shared.ConcurrentGRPCFish(ctx, s.fishClient, &wg, ch)
+		go shared.ConcurrentGRPCMeat(ctx, s.meatClient, &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)
@@ -94,10 +101,12 @@ func (s *BreadServer) Produce(ctx context.Context, req *Bread.Request) (*Bread.R
 
 		for response := range ch {
 			mutex.Lock()
-			if response.Type == "water" {
-				product.WaterId = response.Body
-			} else if response.Type == "flour" {
-				product.FlourId = response.Body
+			if response.Type == "bread" {
+				product.BreadId = response.Body
+			} else if response.Type == "fish" {
+				product.FishId = response.Body
+			} else if response.Type == "meat" {
+				product.MeatId = response.Body
 			}
 			mutex.Unlock()
 		}
@@ -143,25 +152,26 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
 
 	ch := make(chan shared.HTTPResponse)
 	responses := make(map[string]shared.HTTPResponse)
 	var mutex sync.Mutex
 
-	response := shared.BreadHTTPResponse{
+	response := shared.CoalHTTPResponse{
 		Type: ServiceName,
 	}
 	for i := uint64(0); i < quantity; i++ {
 		response.Quantity += 1
 
-		product := shared.SingleBread{
+		product := shared.SingleCoal{
 			Id:             shared.GenerateRandomUUID(),
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, r.URL.Query().Get("response_size")),
 		}
 
-		go shared.ConcurrentHTTPRequest("http://"+FlourServiceAddr, "grain", &wg, ch)
-		go shared.ConcurrentHTTPRequest("http://"+WaterServiceAddr, "water", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+BreadServiceAddr, "bread", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+FishServiceAddr, "fish", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+MeatServiceAddr, "meat", &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)
@@ -181,24 +191,33 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 				return
 			} else {
 				fmt.Printf("Response from %s: %s\n", url, response.Body)
-				if response.Type == "water" {
-					var water shared.BasicTypeHTTPResponse
-					err := json.Unmarshal(response.Body, &water)
+				if response.Type == "fish" {
+					var fish shared.BasicTypeHTTPResponse
+					err := json.Unmarshal(response.Body, &fish)
 					if err != nil {
 						w.Write([]byte(err.Error()))
 						w.WriteHeader(http.StatusInternalServerError)
 						return
 					}
-					product.WaterId = water.Items[0].Id
-				} else if response.Type == "grain" {
-					var grain shared.BasicTypeHTTPResponse
-					err := json.Unmarshal(response.Body, &grain)
+					product.FishId = fish.Items[0].Id
+				} else if response.Type == "bread" {
+					var bread shared.BreadHTTPResponse
+					err := json.Unmarshal(response.Body, &bread)
 					if err != nil {
 						w.Write([]byte(err.Error()))
 						w.WriteHeader(http.StatusInternalServerError)
 						return
 					}
-					product.FlourId = grain.Items[0].Id
+					product.BreadId = bread.Items[0].Id
+				} else if response.Type == "meat" {
+					var meat shared.MeatHTTPResponse
+					err := json.Unmarshal(response.Body, &meat)
+					if err != nil {
+						w.Write([]byte(err.Error()))
+						w.WriteHeader(http.StatusInternalServerError)
+						return
+					}
+					product.MeatId = meat.Items[0].Id
 				}
 			}
 		}
