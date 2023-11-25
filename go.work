@@ -17,6 +17,7 @@ use (
 	services/bread
 	services/coal
 	services/gold
+	services/ironore
 
 	netmark-scheduler
 )

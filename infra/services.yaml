@@ -166,3 +166,15 @@ spec:
       port: 8080
       targetPort: 8080
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netmarks-ironore
+spec:
+  selector:
+    app: netmarks-ironore
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
