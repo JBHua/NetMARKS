@@ -2,11 +2,14 @@ go 1.21.0
 
 use (
 	shared
+
 	services/fish
 	services/grain
 	services/tree
 	services/water
 	services/flour
-	netmark-scheduler
 	services/log
+	services/board
+
+	netmark-scheduler
 )

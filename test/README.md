@@ -23,7 +23,7 @@ For each node (5 nodes total):
  - Max 16 GB RAM
 
 For Each Service (4 + 15 = 19 total):
- - 4 replicas for base service (services that has no dependencies, like fish & water)
+ - 3 replicas for base service (services that has no dependencies, like fish & water)
  - 2 replicas for derived service (like boat, coin and sword)
  - 1 replicas for most complicated service (coin, iron, tools and sword)
  - each process (a pod) have 2 cpu allocated

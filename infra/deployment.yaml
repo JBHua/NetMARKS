@@ -5,7 +5,7 @@ metadata:
   labels:
     app: netmarks-fish
 spec:
-  replicas: 4
+  replicas: 3
   selector:
     matchLabels:
       app: netmarks-fish
@@ -36,7 +36,7 @@ metadata:
   labels:
     app: netmarks-grain
 spec:
-  replicas: 4
+  replicas: 3
   selector:
     matchLabels:
       app: netmarks-grain
@@ -98,7 +98,7 @@ metadata:
   labels:
     app: netmarks-water
 spec:
-  replicas: 4
+  replicas: 3
   selector:
     matchLabels:
       app: netmarks-water
@@ -175,6 +175,37 @@ spec:
       containers:
         - name: netmarks-log
           image: log:0.4.3
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+#      schedulerName: netmark-scheduler
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-board
+  labels:
+    app: netmarks-board
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: netmarks-board
+  template:
+    metadata:
+      labels:
+        app: netmarks-board
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      containers:
+        - name: netmarks-board
+          image: board:0.4.6
           ports:
             - containerPort: 8080
           env:

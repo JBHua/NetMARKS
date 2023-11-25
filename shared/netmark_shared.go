@@ -223,3 +223,15 @@ type LogHTTPResponse struct {
 	Type     string
 	Items    []SingleLog
 }
+
+type SingleBoard struct {
+	Id             string
+	RandomMetadata string
+	LogId          string
+}
+
+type BoardHTTPResponse struct {
+	Quantity uint64
+	Type     string
+	Items    []SingleBoard
+}
