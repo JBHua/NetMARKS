@@ -9,7 +9,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/soheilhy/cmux"
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/codes"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
@@ -32,19 +31,16 @@ var RequestCount = shared.InitPrometheusRequestCountMetrics()
 
 type FishServer struct {
 	Fish.UnimplementedFishServer
-	logger *otelzap.SugaredLogger
 }
 
-func NewFishServer(l *otelzap.SugaredLogger) *FishServer {
-	return &FishServer{
-		logger: l,
-	}
+func NewFishServer() *FishServer {
+	return &FishServer{}
 }
 
-func newGRPCServer(lis net.Listener, logger *otelzap.SugaredLogger) error {
+func newGRPCServer(lis net.Listener) error {
 	grpcServer := grpc.NewServer()
 
-	Fish.RegisterFishServer(grpcServer, NewFishServer(logger))
+	Fish.RegisterFishServer(grpcServer, NewFishServer())
 	reflection.Register(grpcServer)
 
 	return grpcServer.Serve(lis)
@@ -142,7 +138,7 @@ func main() {
 
 	// Use an error group to start all of them
 	g := errgroup.Group{}
-	g.Go(func() error { return newGRPCServer(grpcListener, logger) })
+	g.Go(func() error { return newGRPCServer(grpcListener) })
 	g.Go(func() error { return newHTTPServer(httpListener) })
 	g.Go(func() error { return mux.Serve() })
 

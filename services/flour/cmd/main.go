@@ -10,7 +10,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/soheilhy/cmux"
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/codes"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
@@ -25,7 +24,7 @@ import (
 
 const ServiceName = "Flour"
 const ServicePort = "8080"
-const GrainServiceAddr = "netmarks-grain.default.svc.cluster.local:5018"
+const GrainServiceAddr = "netmarks-grain.default.svc.cluster.local:8080"
 
 var NodeName = os.Getenv("K8S_NODE_NAME")
 var RequestCount = shared.InitPrometheusRequestCountMetrics()
@@ -34,23 +33,21 @@ var RequestCount = shared.InitPrometheusRequestCountMetrics()
 
 type FlourServer struct {
 	Flour.UnimplementedFlourServer
-	logger      *otelzap.SugaredLogger
 	grainClient Grain.GrainClient
 }
 
-func NewFlourServer(l *otelzap.SugaredLogger, c Grain.GrainClient) *FlourServer {
+func NewFlourServer(c Grain.GrainClient) *FlourServer {
 	return &FlourServer{
-		logger:      l,
 		grainClient: c,
 	}
 }
 
-func newGRPCServer(lis net.Listener, logger *otelzap.SugaredLogger) error {
+func newGRPCServer(lis net.Listener) error {
 	grpcServer := grpc.NewServer()
 	reflection.Register(grpcServer)
 
 	grainClient := Grain.NewGrainClient(shared.InitGrpcClientConn(GrainServiceAddr))
-	Flour.RegisterFlourServer(grpcServer, NewFlourServer(logger, grainClient))
+	Flour.RegisterFlourServer(grpcServer, NewFlourServer(grainClient))
 
 	return grpcServer.Serve(lis)
 }
@@ -59,6 +56,10 @@ func (s *FlourServer) Produce(ctx context.Context, req *Flour.Request) (*Flour.R
 	shared.SetGRPCHeader(&ctx)
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
 	defer span.End()
+	defer RequestCount.With(prometheus.Labels{
+		"service_name": ServiceName,
+		"node_name":    NodeName,
+	}).Inc()
 
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
@@ -171,7 +172,7 @@ func main() {
 
 	// Use an error group to start all of them
 	g := errgroup.Group{}
-	g.Go(func() error { return newGRPCServer(grpcListener, logger) })
+	g.Go(func() error { return newGRPCServer(grpcListener) })
 	g.Go(func() error { return newHTTPServer(httpListener) })
 	g.Go(func() error { return mux.Serve() })
 

@@ -9,7 +9,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/soheilhy/cmux"
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/codes"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
@@ -32,20 +31,17 @@ var RequestCount = shared.InitPrometheusRequestCountMetrics()
 
 type WaterServer struct {
 	Water.UnimplementedWaterServer
-	logger *otelzap.SugaredLogger
 }
 
-func NewWaterServer(l *otelzap.SugaredLogger) *WaterServer {
-	return &WaterServer{
-		logger: l,
-	}
+func NewWaterServer() *WaterServer {
+	return &WaterServer{}
 }
 
-func newGRPCServer(lis net.Listener, logger *otelzap.SugaredLogger) error {
+func newGRPCServer(lis net.Listener) error {
 	grpcServer := grpc.NewServer()
 	reflection.Register(grpcServer)
 
-	Water.RegisterWaterServer(grpcServer, NewWaterServer(logger))
+	Water.RegisterWaterServer(grpcServer, NewWaterServer())
 
 	return grpcServer.Serve(lis)
 }
@@ -54,6 +50,10 @@ func (s *WaterServer) Produce(ctx context.Context, req *Water.Request) (*Water.R
 	shared.SetGRPCHeader(&ctx)
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
 	defer span.End()
+	defer RequestCount.With(prometheus.Labels{
+		"service_name": ServiceName,
+		"node_name":    NodeName,
+	}).Inc()
 
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
@@ -142,7 +142,7 @@ func main() {
 
 	// Use an error group to start all of them
 	g := errgroup.Group{}
-	g.Go(func() error { return newGRPCServer(grpcListener, logger) })
+	g.Go(func() error { return newGRPCServer(grpcListener) })
 	g.Go(func() error { return newHTTPServer(httpListener) })
 	g.Go(func() error { return mux.Serve() })
 

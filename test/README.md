@@ -23,8 +23,10 @@ For each node (5 nodes total):
  - Max 16 GB RAM
 
 For Each Service (4 + 15 = 19 total):
- - 5 replicas for base service (services that has no dependencies, like fish & water)
- - 3 replicas for derived service (like boat, coin and sword)
+ - 4 replicas for base service (services that has no dependencies, like fish & water)
+ - 2 replicas for derived service (like boat, coin and sword)
+ - 1 replicas for most complicated service (coin, iron, tools and sword)
+ - each process (a pod) have 2 cpu allocated
 
 ## Mean Application Response Time
 10 Requests total, should be complete under 60s. 1 second of sleep in between requests.

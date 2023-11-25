@@ -64,7 +64,7 @@ func InitSugaredLogger() *otelzap.SugaredLogger {
 
 func ConfigureRuntime() {
 	//nuCPU := runtime.NumCPU()
-	runtime.GOMAXPROCS(4)
+	runtime.GOMAXPROCS(2)
 	fmt.Printf("RUNNING WITH %d CPU\n", 4)
 }
 
@@ -222,9 +222,4 @@ type LogHTTPResponse struct {
 	Quantity uint64
 	Type     string
 	Items    []SingleLog
-}
-
-type WaterHTTP struct {
-	Id             string
-	RandomMetadata string
 }

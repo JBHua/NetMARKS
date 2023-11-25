@@ -1,6 +1,7 @@
 package main
 
 import (
+	Log "NetMARKS/services/log/proto"
 	Tree "NetMARKS/services/tree/proto"
 	"NetMARKS/shared"
 	"context"
@@ -21,32 +22,37 @@ import (
 	"time"
 )
 
-const ServiceName = "Tree"
+const ServiceName = "Log"
 const ServicePort = "8080"
+const TreeServiceAddr = "netmarks-tree.default.svc.cluster.local:8080"
 
 var NodeName = os.Getenv("K8S_NODE_NAME")
 var RequestCount = shared.InitPrometheusRequestCountMetrics()
 
 // --------------- gRPC Methods ---------------
 
-type TreeServer struct {
-	Tree.UnimplementedTreeServer
+type LogServer struct {
+	Log.UnimplementedLogServer
+	treeClient Tree.TreeClient
 }
 
-func NewTreeServer() *TreeServer {
-	return &TreeServer{}
+func NewLogServer(t Tree.TreeClient) *LogServer {
+	return &LogServer{
+		treeClient: t,
+	}
 }
 
 func newGRPCServer(lis net.Listener) error {
 	grpcServer := grpc.NewServer()
 	reflection.Register(grpcServer)
 
-	Tree.RegisterTreeServer(grpcServer, NewTreeServer())
+	treeClient := Tree.NewTreeClient(shared.InitGrpcClientConn(TreeServiceAddr))
+	Log.RegisterLogServer(grpcServer, NewLogServer(treeClient))
 
 	return grpcServer.Serve(lis)
 }
 
-func (s *TreeServer) Produce(ctx context.Context, req *Tree.Request) (*Tree.Response, error) {
+func (s *LogServer) Produce(ctx context.Context, req *Log.Request) (*Log.Response, error) {
 	shared.SetGRPCHeader(&ctx)
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
 	defer span.End()
@@ -57,12 +63,22 @@ func (s *TreeServer) Produce(ctx context.Context, req *Tree.Request) (*Tree.Resp
 
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
-	r := Tree.Response{}
+	r := Log.Response{}
 	for i := uint64(0); i < req.Quantity; i++ {
 		r.Quantity += 1
-		r.Items = append(r.Items, &Tree.Single{
+
+		singleTree, err := s.treeClient.Produce(ctx, &Tree.Request{
+			Quantity:     1,
+			ResponseSize: "1",
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		r.Items = append(r.Items, &Log.Single{
 			Id:             shared.GenerateRandomUUID(),
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, req.ResponseSize),
+			TreeId:         singleTree.Items[0].Id,
 		})
 
 		time.Sleep(time.Duration(latency) * time.Millisecond)
@@ -103,14 +119,32 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
-	response := shared.BasicTypeHTTPResponse{
+	response := shared.LogHTTPResponse{
 		Type: ServiceName,
 	}
 	for i := uint64(0); i < quantity; i++ {
 		response.Quantity += 1
-		response.Items = append(response.Items, shared.SingleBasicType{
+
+		getRes, err := http.Get("http://" + TreeServiceAddr + "?quantity=1&response_size=1")
+		if err != nil {
+			w.Write([]byte(err.Error()))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		defer getRes.Body.Close()
+
+		var grain shared.BasicTypeHTTPResponse
+		err = json.NewDecoder(getRes.Body).Decode(&grain)
+		if err != nil {
+			w.Write([]byte(err.Error()))
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		response.Items = append(response.Items, shared.SingleLog{
 			Id:             shared.GenerateRandomUUID(),
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, r.URL.Query().Get("response_size")),
+			TreeId:         grain.Items[0].Id,
 		})
 
 		time.Sleep(time.Duration(latency) * time.Millisecond)

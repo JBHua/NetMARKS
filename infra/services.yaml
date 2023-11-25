@@ -7,19 +7,7 @@ spec:
     app: netmarks-fish
   ports:
     - protocol: TCP
-      port: 5010
-      targetPort: 8080
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: netmarks-flour
-spec:
-  selector:
-    app: netmarks-flour
-  ports:
-    - protocol: TCP
-      port: 5011
+      port: 8080
       targetPort: 8080
 ---
 apiVersion: v1
@@ -31,6 +19,54 @@ spec:
     app: netmarks-grain
   ports:
     - protocol: TCP
-      port: 5018
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netmarks-tree
+spec:
+  selector:
+    app: netmarks-tree
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netmarks-water
+spec:
+  selector:
+    app: netmarks-water
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netmarks-flour
+spec:
+  selector:
+    app: netmarks-flour
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netmarks-log
+spec:
+  selector:
+    app: netmarks-log
+  ports:
+    - protocol: TCP
+      port: 8080
       targetPort: 8080
 ---

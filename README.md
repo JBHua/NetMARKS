@@ -25,6 +25,9 @@ more setup is needed:
 2. Install Prometheus & Grafana (optional) using Istio
    - https://istio.io/latest/docs/ops/integrations/prometheus/
    - https://istio.io/latest/docs/ops/integrations/grafana
+3. Useful Add-ons:
+    - minikube dashboard
+    - kubernetes-sigs/metrics-server
 4. Enable Scheduler
     - Custom: See following section
 
