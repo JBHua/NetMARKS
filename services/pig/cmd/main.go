@@ -1,8 +1,8 @@
 package main
 
 import (
-	Beer "NetMARKS/services/beer/proto"
 	Grain "NetMARKS/services/grain/proto"
+	Pig "NetMARKS/services/pig/proto"
 	Water "NetMARKS/services/water/proto"
 	"NetMARKS/shared"
 	"context"
@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const ServiceName = "Beer"
+const ServiceName = "Pig"
 const ServicePort = "8080"
 
 const GrainServiceAddr = "netmarks-grain.default.svc.cluster.local:8080"
@@ -35,14 +35,14 @@ var RequestCount = shared.InitPrometheusRequestCountMetrics()
 
 // --------------- gRPC Methods ---------------
 
-type BeerServer struct {
-	Beer.UnimplementedBeerServer
+type PigServer struct {
+	Pig.UnimplementedPigServer
 	waterClient Water.WaterClient
 	grainClient Grain.GrainClient
 }
 
-func NewBeerServer(w Water.WaterClient, g Grain.GrainClient) *BeerServer {
-	return &BeerServer{
+func NewPigServer(w Water.WaterClient, g Grain.GrainClient) *PigServer {
+	return &PigServer{
 		waterClient: w,
 		grainClient: g,
 	}
@@ -54,12 +54,12 @@ func newGRPCServer(lis net.Listener) error {
 
 	waterClient := Water.NewWaterClient(shared.InitGrpcClientConn(WaterServiceAddr))
 	grainClient := Grain.NewGrainClient(shared.InitGrpcClientConn(GrainServiceAddr))
-	Beer.RegisterBeerServer(grpcServer, NewBeerServer(waterClient, grainClient))
+	Pig.RegisterPigServer(grpcServer, NewPigServer(waterClient, grainClient))
 
 	return grpcServer.Serve(lis)
 }
 
-func (s *BeerServer) Produce(ctx context.Context, req *Beer.Request) (*Beer.Response, error) {
+func (s *PigServer) Produce(ctx context.Context, req *Pig.Request) (*Pig.Response, error) {
 	shared.SetGRPCHeader(&ctx)
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
 	defer span.End()
@@ -76,11 +76,11 @@ func (s *BeerServer) Produce(ctx context.Context, req *Beer.Request) (*Beer.Resp
 	ch := make(chan shared.GRPCResponse)
 	var mutex sync.Mutex
 
-	r := Beer.Response{}
+	r := Pig.Response{}
 	for i := uint64(0); i < req.Quantity; i++ {
 		r.Quantity += 1
 
-		singleBeer := Beer.Single{
+		singlePig := Pig.Single{
 			Id:             shared.GenerateRandomUUID(),
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, req.ResponseSize),
 		}
@@ -95,14 +95,14 @@ func (s *BeerServer) Produce(ctx context.Context, req *Beer.Request) (*Beer.Resp
 		for response := range ch {
 			mutex.Lock()
 			if response.Type == "water" {
-				singleBeer.WaterId = response.Body
+				singlePig.WaterId = response.Body
 			} else if response.Type == "grain" {
-				singleBeer.GrainId = response.Body
+				singlePig.GrainId = response.Body
 			}
 			mutex.Unlock()
 		}
 
-		r.Items = append(r.Items, &singleBeer)
+		r.Items = append(r.Items, &singlePig)
 
 		time.Sleep(time.Duration(latency) * time.Millisecond)
 	}
@@ -149,13 +149,13 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 	responses := make(map[string]shared.HTTPResponse)
 	var mutex sync.Mutex
 
-	response := shared.BeerHTTPResponse{
+	response := shared.PigHTTPResponse{
 		Type: ServiceName,
 	}
 	for i := uint64(0); i < quantity; i++ {
 		response.Quantity += 1
 
-		singleBeer := shared.SingleBeer{
+		singlePig := shared.SinglePig{
 			Id:             shared.GenerateRandomUUID(),
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, r.URL.Query().Get("response_size")),
 		}
@@ -166,12 +166,6 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 			wg.Wait()
 			close(ch)
 		}()
-
-		//for response := range ch {
-		//	mutex.Lock()
-		//	responses[response.Type] = response
-		//	mutex.Unlock()
-		//}
 
 		for response := range ch {
 			mutex.Lock()
@@ -195,7 +189,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 						w.WriteHeader(http.StatusInternalServerError)
 						return
 					}
-					singleBeer.WaterId = water.Items[0].Id
+					singlePig.WaterId = water.Items[0].Id
 				} else if response.Type == "grain" {
 					var grain shared.BasicTypeHTTPResponse
 					err := json.Unmarshal(response.Body, &grain)
@@ -204,12 +198,12 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 						w.WriteHeader(http.StatusInternalServerError)
 						return
 					}
-					singleBeer.GrainId = grain.Items[0].Id
+					singlePig.GrainId = grain.Items[0].Id
 				}
 			}
 		}
 
-		response.Items = append(response.Items, singleBeer)
+		response.Items = append(response.Items, singlePig)
 
 		time.Sleep(time.Duration(latency) * time.Millisecond)
 	}

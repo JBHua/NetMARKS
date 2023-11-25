@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package  netmarks_pig;
+
+option go_package = "NetMARKS/services/pig/proto";
+
+service Pig {
+  rpc Produce(Request) returns (Response) {}
+}
+
+message Request {
+  uint64 quantity = 1;
+  string response_size = 2;
+}
+
+message Response {
+  uint64 quantity = 1;
+  repeated Single items = 2;
+}
+
+message Single {
+  string id = 1;
+  string random_metadata = 2;
+  string water_id = 3;
+  string grain_id = 4;
+}

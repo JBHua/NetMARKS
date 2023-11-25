@@ -11,6 +11,7 @@ use (
 	services/log
 	services/board
 	services/beer
+	services/pig
 
 	netmark-scheduler
 )

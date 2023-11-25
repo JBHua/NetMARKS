@@ -92,13 +92,13 @@ func InitPrometheusRequestCountMetrics() *prometheus.CounterVec {
 
 // --------------- gRPC Related ---------------
 
-type ConcurrentGRPCResponse struct {
+type GRPCResponse struct {
 	Type string
 	Body string
 	Err  error
 }
 
-func ConcurrentGRPCWater(ctx context.Context, client Water.WaterClient, wg *sync.WaitGroup, ch chan<- ConcurrentGRPCResponse) {
+func ConcurrentGRPCWater(ctx context.Context, client Water.WaterClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
 	t := "water"
 	defer wg.Done()
 
@@ -107,14 +107,14 @@ func ConcurrentGRPCWater(ctx context.Context, client Water.WaterClient, wg *sync
 		ResponseSize: "1",
 	})
 	if err != nil {
-		ch <- ConcurrentGRPCResponse{Type: t, Err: err}
+		ch <- GRPCResponse{Type: t, Err: err}
 		return
 	}
 
-	ch <- ConcurrentGRPCResponse{Type: t, Body: produce.Items[0].Id}
+	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
 }
 
-func ConcurrentGRPCGrain(ctx context.Context, client Grain.GrainClient, wg *sync.WaitGroup, ch chan<- ConcurrentGRPCResponse) {
+func ConcurrentGRPCGrain(ctx context.Context, client Grain.GrainClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
 	t := "grain"
 	defer wg.Done()
 
@@ -123,11 +123,11 @@ func ConcurrentGRPCGrain(ctx context.Context, client Grain.GrainClient, wg *sync
 		ResponseSize: "1",
 	})
 	if err != nil {
-		ch <- ConcurrentGRPCResponse{Type: t, Err: err}
+		ch <- GRPCResponse{Type: t, Err: err}
 		return
 	}
 
-	ch <- ConcurrentGRPCResponse{Type: t, Body: produce.Items[0].Id}
+	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
 }
 
 func InitGrpcClientConn(targetAddr string) *grpc.ClientConn {
@@ -265,4 +265,17 @@ type BeerHTTPResponse struct {
 	Quantity uint64       `json:"quantity,omitempty"`
 	Type     string       `json:"type,omitempty"`
 	Items    []SingleBeer `json:"items,omitempty"`
+}
+
+type SinglePig struct {
+	Id             string `json:"id,omitempty"`
+	RandomMetadata string `json:"randomMetadata,omitempty"`
+	GrainId        string `json:"grainId,omitempty"`
+	WaterId        string `json:"waterId,omitempty"`
+}
+
+type PigHTTPResponse struct {
+	Quantity uint64      `json:"quantity,omitempty"`
+	Type     string      `json:"type,omitempty"`
+	Items    []SinglePig `json:"items,omitempty"`
 }
