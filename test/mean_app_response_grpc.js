@@ -1,10 +1,6 @@
 import grpc from 'k6/net/grpc'
 import { check, sleep } from "k6";
 
-const client = new grpc.Client();
-// client.load(['../services/'], '/beer/proto/beer.proto');
-
-// Test configuration
 export const options = {
     thresholds: {
         // Assert that 99% of requests finish within 3000ms.
@@ -17,22 +13,23 @@ export const options = {
     ],
 };
 
-// Simulated user behavior
+const client = new grpc.Client();
 export default function () {
-    let base_url = "127.0.0.1:62792"
-
+    let base_url = `127.0.0.1:${__ENV.PORT}`
     client.connect(base_url, {
         plaintext: true,
-        timeout: "2s",
+        timeout: "3s",
         reflect: true
     });
 
-    const response = client.invoke('netmarks_coal.Coal/Produce', {
-        quantity: 1,
-        response_size: "512b"
-    })
+    let SVC_NAME = `${__ENV.SVC_NAME}`
+    let package_name = `netmarks_${__ENV.SVC_NAME}`
+    let service_name = SVC_NAME.charAt(0).toUpperCase() + SVC_NAME.slice(1);
 
-    console.log(JSON.stringify(response.message));
+    const response = client.invoke(`${package_name}.${service_name}/Produce`, {
+        quantity: `${__ENV.Q}`,
+        response_size: `${__ENV.RES}`,
+    })
 
     check(response, {
         "status is OK": (r) => r && r.status === grpc.StatusOK,
