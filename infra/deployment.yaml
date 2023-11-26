@@ -298,7 +298,7 @@ spec:
     spec:
       containers:
         - name: netmarks-boat
-          image: boat:0.4.1
+          image: boat:0.4.7
           ports:
             - containerPort: 8080
           env:
@@ -329,7 +329,7 @@ spec:
     spec:
       containers:
         - name: netmarks-meat
-          image: meat:0.4.1
+          image: meat:0.4.2
           ports:
             - containerPort: 8080
           env:

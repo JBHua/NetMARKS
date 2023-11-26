@@ -133,7 +133,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 		}
 		defer getRes.Body.Close()
 
-		var pig shared.SinglePig
+		var pig shared.PigHTTPResponse
 		err = json.NewDecoder(getRes.Body).Decode(&pig)
 		if err != nil {
 			w.Write([]byte(err.Error()))
@@ -144,7 +144,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 		response.Items = append(response.Items, shared.SingleMeat{
 			Id:             shared.GenerateRandomUUID(),
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, r.URL.Query().Get("response_size")),
-			PigId:          pig.Id,
+			PigId:          pig.Items[0].Id,
 		})
 
 		time.Sleep(time.Duration(latency) * time.Millisecond)

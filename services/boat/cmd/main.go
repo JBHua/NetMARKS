@@ -133,7 +133,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 		}
 		defer getRes.Body.Close()
 
-		var board shared.SingleBoard
+		var board shared.BoardHTTPResponse
 		err = json.NewDecoder(getRes.Body).Decode(&board)
 		if err != nil {
 			w.Write([]byte(err.Error()))
@@ -144,7 +144,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 		response.Items = append(response.Items, shared.SingleBoat{
 			Id:             shared.GenerateRandomUUID(),
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, r.URL.Query().Get("response_size")),
-			BoardId:        board.Id,
+			BoardId:        board.Items[0].Id,
 		})
 
 		time.Sleep(time.Duration(latency) * time.Millisecond)
