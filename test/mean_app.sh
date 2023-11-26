@@ -35,6 +35,5 @@ sleep 2
 
 echo "1 mb payload size"
 k6 run -e Q=1 -e RES=1m mean_app_response_"$PROTOCOL_NAME".js
-sleep 2
 
 echo "Test Finished"

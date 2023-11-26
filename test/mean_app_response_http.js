@@ -15,7 +15,7 @@ export const options = {
 
 // Simulated user behavior
 export default function () {
-    let base_url = "http://127.0.0.1:62792/"
+    let base_url = "http://127.0.0.1:50038/"
     let res = http.get(`${base_url}?quantity=${__ENV.Q}&response_size=${__ENV.RES}`);
 
     // Validate response status
