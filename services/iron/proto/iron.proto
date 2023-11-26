@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package  netmarks_iron;
+
+option go_package = "NetMARKS/services/iron/proto";
+
+service Iron {
+  rpc Produce(Request) returns (Response) {}
+}
+
+message Request {
+  uint64 quantity = 1;
+  string response_size = 2;
+}
+
+message Response {
+  uint64 quantity = 1;
+  repeated Single items = 2;
+}
+
+message Single {
+  string id = 1;
+  string random_metadata = 2;
+  string ironore_id = 3;
+  string coal_id = 4;
+}

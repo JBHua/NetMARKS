@@ -19,6 +19,7 @@ use (
 	services/gold
 	services/ironore
 	services/coin
+	services/iron
 
 	netmark-scheduler
 )

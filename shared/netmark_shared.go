@@ -7,6 +7,7 @@ import (
 	Flour "NetMARKS/services/flour/proto"
 	Gold "NetMARKS/services/gold/proto"
 	Grain "NetMARKS/services/grain/proto"
+	Ironore "NetMARKS/services/ironore/proto"
 	Meat "NetMARKS/services/meat/proto"
 	Water "NetMARKS/services/water/proto"
 	"context"
@@ -232,6 +233,22 @@ func ConcurrentGRPCGold(ctx context.Context, client Gold.GoldClient, wg *sync.Wa
 	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
 }
 
+func ConcurrentGRPCIronore(ctx context.Context, client Ironore.IronoreClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
+	t := "gold"
+	defer wg.Done()
+
+	produce, err := client.Produce(ctx, &Ironore.Request{
+		Quantity:     1,
+		ResponseSize: "1",
+	})
+	if err != nil {
+		ch <- GRPCResponse{Type: t, Err: err}
+		return
+	}
+
+	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
+}
+
 func InitGrpcClientConn(targetAddr string) *grpc.ClientConn {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -444,4 +461,17 @@ type CoinHTTPResponse struct {
 	Quantity uint64       `json:"quantity,omitempty"`
 	Type     string       `json:"type,omitempty"`
 	Items    []SingleCoin `json:"items,omitempty"`
+}
+
+type SingleIron struct {
+	Id             string `json:"id,omitempty"`
+	RandomMetadata string `json:"randomMetadata,omitempty"`
+	CoalId         string `json:"coalId,omitempty"`
+	IronoreId      string `json:"ironoreId,omitempty"`
+}
+
+type IronHTTPResponse struct {
+	Quantity uint64       `json:"quantity,omitempty"`
+	Type     string       `json:"type,omitempty"`
+	Items    []SingleIron `json:"items,omitempty"`
 }

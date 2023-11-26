@@ -2,8 +2,8 @@ package main
 
 import (
 	Coal "NetMARKS/services/coal/proto"
-	Coin "NetMARKS/services/coin/proto"
-	Gold "NetMARKS/services/gold/proto"
+	Iron "NetMARKS/services/iron/proto"
+	Ironore "NetMARKS/services/ironore/proto"
 	"NetMARKS/shared"
 	"context"
 	"encoding/json"
@@ -24,27 +24,27 @@ import (
 	"time"
 )
 
-const ServiceName = "Coin"
+const ServiceName = "Iron"
 const ServicePort = "8080"
 
 const CoalServiceAddr = "netmarks-coal.default.svc.cluster.local:8080"
-const GoldServiceAddr = "netmarks-gold.default.svc.cluster.local:8080"
+const IronoreServiceAddr = "netmarks-ironore.default.svc.cluster.local:8080"
 
 var NodeName = os.Getenv("K8S_NODE_NAME")
 var RequestCount = shared.InitPrometheusRequestCountMetrics()
 
 // --------------- gRPC Methods ---------------
 
-type CoinServer struct {
-	Coin.UnimplementedCoinServer
-	coalClient Coal.CoalClient
-	goldClient Gold.GoldClient
+type IronServer struct {
+	Iron.UnimplementedIronServer
+	coalClient    Coal.CoalClient
+	ironoreClient Ironore.IronoreClient
 }
 
-func NewCoinServer(c Coal.CoalClient, g Gold.GoldClient) *CoinServer {
-	return &CoinServer{
-		coalClient: c,
-		goldClient: g,
+func NewIronServer(c Coal.CoalClient, i Ironore.IronoreClient) *IronServer {
+	return &IronServer{
+		coalClient:    c,
+		ironoreClient: i,
 	}
 }
 
@@ -52,14 +52,14 @@ func newGRPCServer(lis net.Listener) error {
 	grpcServer := grpc.NewServer()
 	reflection.Register(grpcServer)
 
-	coalClient := Coal.NewCoalClient(shared.InitGrpcClientConn(GoldServiceAddr))
-	goldClient := Gold.NewGoldClient(shared.InitGrpcClientConn(CoalServiceAddr))
-	Coin.RegisterCoinServer(grpcServer, NewCoinServer(coalClient, goldClient))
+	coalClient := Coal.NewCoalClient(shared.InitGrpcClientConn(CoalServiceAddr))
+	ironoreClient := Ironore.NewIronoreClient(shared.InitGrpcClientConn(IronoreServiceAddr))
+	Iron.RegisterIronServer(grpcServer, NewIronServer(coalClient, ironoreClient))
 
 	return grpcServer.Serve(lis)
 }
 
-func (s *CoinServer) Produce(ctx context.Context, req *Coin.Request) (*Coin.Response, error) {
+func (s *IronServer) Produce(ctx context.Context, req *Iron.Request) (*Iron.Response, error) {
 	shared.SetGRPCHeader(&ctx)
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
 	defer span.End()
@@ -76,17 +76,17 @@ func (s *CoinServer) Produce(ctx context.Context, req *Coin.Request) (*Coin.Resp
 	ch := make(chan shared.GRPCResponse)
 	var mutex sync.Mutex
 
-	r := Coin.Response{}
+	r := Iron.Response{}
 	for i := uint64(0); i < req.Quantity; i++ {
 		r.Quantity += 1
 
-		singleCoin := Coin.Single{
+		singleIron := Iron.Single{
 			Id:             shared.GenerateRandomUUID(),
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, req.ResponseSize),
 		}
 
 		go shared.ConcurrentGRPCCoal(ctx, s.coalClient, &wg, ch)
-		go shared.ConcurrentGRPCGold(ctx, s.goldClient, &wg, ch)
+		go shared.ConcurrentGRPCIronore(ctx, s.ironoreClient, &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)
@@ -95,14 +95,14 @@ func (s *CoinServer) Produce(ctx context.Context, req *Coin.Request) (*Coin.Resp
 		for response := range ch {
 			mutex.Lock()
 			if response.Type == "coal" {
-				singleCoin.CoalId = response.Body
-			} else if response.Type == "gold" {
-				singleCoin.GoldId = response.Body
+				singleIron.CoalId = response.Body
+			} else if response.Type == "ironore" {
+				singleIron.IronoreId = response.Body
 			}
 			mutex.Unlock()
 		}
 
-		r.Items = append(r.Items, &singleCoin)
+		r.Items = append(r.Items, &singleIron)
 
 		time.Sleep(time.Duration(latency) * time.Millisecond)
 	}
@@ -149,19 +149,19 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 	responses := make(map[string]shared.HTTPResponse)
 	var mutex sync.Mutex
 
-	response := shared.CoinHTTPResponse{
+	response := shared.IronHTTPResponse{
 		Type: ServiceName,
 	}
 	for i := uint64(0); i < quantity; i++ {
 		response.Quantity += 1
 
-		singleCoin := shared.SingleCoin{
+		singleIron := shared.SingleIron{
 			Id:             shared.GenerateRandomUUID(),
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, r.URL.Query().Get("response_size")),
 		}
 
 		go shared.ConcurrentHTTPRequest("http://"+CoalServiceAddr, "coal", &wg, ch)
-		go shared.ConcurrentHTTPRequest("http://"+GoldServiceAddr, "gold", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+IronoreServiceAddr, "ironore", &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)
@@ -189,21 +189,21 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 						w.WriteHeader(http.StatusInternalServerError)
 						return
 					}
-					singleCoin.CoalId = coal.Items[0].Id
-				} else if response.Type == "gold" {
-					var gold shared.CoalHTTPResponse
-					err := json.Unmarshal(response.Body, &gold)
+					singleIron.CoalId = coal.Items[0].Id
+				} else if response.Type == "ironore" {
+					var ironore shared.CoalHTTPResponse
+					err := json.Unmarshal(response.Body, &ironore)
 					if err != nil {
 						w.Write([]byte(err.Error()))
 						w.WriteHeader(http.StatusInternalServerError)
 						return
 					}
-					singleCoin.GoldId = gold.Items[0].Id
+					singleIron.IronoreId = ironore.Items[0].Id
 				}
 			}
 		}
 
-		response.Items = append(response.Items, singleCoin)
+		response.Items = append(response.Items, singleIron)
 
 		time.Sleep(time.Duration(latency) * time.Millisecond)
 	}
