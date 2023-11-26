@@ -21,6 +21,7 @@ use (
 	services/coin
 	services/iron
 	services/tools
+	services/sword
 
 	netmark-scheduler
 )
