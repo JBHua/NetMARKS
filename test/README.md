@@ -29,7 +29,7 @@ For Each Service (4 + 15 = 19 total):
  - each process (a pod) have 2 cpu allocated
 
 ## Mean Application Response Time
-10 Requests total, should be complete under 60s. 1 second of sleep in between requests.
+10 Requests total, should be complete under 10s. 1 second of sleep in between requests.
 Test for each service is conducted independently (no parallel testing)
 
 For each request, only ask the application to produce one result. Response size is changed upon request

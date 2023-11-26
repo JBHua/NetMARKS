@@ -2,7 +2,7 @@ import grpc from 'k6/net/grpc'
 import { check, sleep } from "k6";
 
 const client = new grpc.Client();
-client.load(['../services/'], '/beer/proto/beer.proto');
+// client.load(['../services/'], '/beer/proto/beer.proto');
 
 // Test configuration
 export const options = {
@@ -13,21 +13,21 @@ export const options = {
     // Ramp the number of virtual users up and down
     stages: [
         // { duration: "60s", target: 10 },
-        { duration: "5s", target: 1 },
+        { duration: "10s", target: 10 },
     ],
 };
 
 // Simulated user behavior
 export default function () {
-    let base_url = "127.0.0.1:8080"
+    let base_url = "127.0.0.1:62792"
 
-    client.connect('127.0.0.1:54911', {
+    client.connect(base_url, {
         plaintext: true,
         timeout: "2s",
-        reflect: false
+        reflect: true
     });
 
-    const response = client.invoke('netmarks_beer.Beer/Produce', {
+    const response = client.invoke('netmarks_coal.Coal/Produce', {
         quantity: 1,
         response_size: "512b"
     })
@@ -37,8 +37,6 @@ export default function () {
     check(response, {
         "status is OK": (r) => r && r.status === grpc.StatusOK,
     });
-
-    console.log(JSON.stringify(response.message));
 
     sleep(1);
 }
