@@ -1,6 +1,7 @@
 package shared
 
 import (
+	Board "NetMARKS/services/board/proto"
 	Bread "NetMARKS/services/bread/proto"
 	Coal "NetMARKS/services/coal/proto"
 	Fish "NetMARKS/services/fish/proto"
@@ -249,6 +250,22 @@ func ConcurrentGRPCIronore(ctx context.Context, client Ironore.IronoreClient, wg
 	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
 }
 
+func ConcurrentGRPCBoard(ctx context.Context, client Board.BoardClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
+	t := "gold"
+	defer wg.Done()
+
+	produce, err := client.Produce(ctx, &Board.Request{
+		Quantity:     1,
+		ResponseSize: "1",
+	})
+	if err != nil {
+		ch <- GRPCResponse{Type: t, Err: err}
+		return
+	}
+
+	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
+}
+
 func InitGrpcClientConn(targetAddr string) *grpc.ClientConn {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -474,4 +491,17 @@ type IronHTTPResponse struct {
 	Quantity uint64       `json:"quantity,omitempty"`
 	Type     string       `json:"type,omitempty"`
 	Items    []SingleIron `json:"items,omitempty"`
+}
+
+type SingleTool struct {
+	Id             string `json:"id,omitempty"`
+	RandomMetadata string `json:"randomMetadata,omitempty"`
+	BoardId        string `json:"boardId,omitempty"`
+	IronoreId      string `json:"ironoreId,omitempty"`
+}
+
+type ToolsHTTPResponse struct {
+	Quantity uint64       `json:"quantity,omitempty"`
+	Type     string       `json:"type,omitempty"`
+	Items    []SingleTool `json:"items,omitempty"`
 }

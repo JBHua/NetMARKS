@@ -1,0 +1,238 @@
+package main
+
+import (
+	Board "NetMARKS/services/board/proto"
+	Ironore "NetMARKS/services/ironore/proto"
+	Tools "NetMARKS/services/tools/proto"
+	"NetMARKS/shared"
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/soheilhy/cmux"
+	"go.opentelemetry.io/otel/codes"
+	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+	"log"
+	"net"
+	"net/http"
+	"os"
+	"strconv"
+	"sync"
+	"time"
+)
+
+const ServiceName = "Tools"
+const ServicePort = "8080"
+
+const BoardServiceAddr = "netmarks-board.default.svc.cluster.local:8080"
+const IronoreServiceAddr = "netmarks-ironore.default.svc.cluster.local:8080"
+
+var NodeName = os.Getenv("K8S_NODE_NAME")
+var RequestCount = shared.InitPrometheusRequestCountMetrics()
+
+// --------------- gRPC Methods ---------------
+
+type ToolsServer struct {
+	Tools.UnimplementedToolsServer
+	boardClient   Board.BoardClient
+	ironoreClient Ironore.IronoreClient
+}
+
+func NewToolsServer(b Board.BoardClient, i Ironore.IronoreClient) *ToolsServer {
+	return &ToolsServer{
+		boardClient:   b,
+		ironoreClient: i,
+	}
+}
+
+func newGRPCServer(lis net.Listener) error {
+	grpcServer := grpc.NewServer()
+	reflection.Register(grpcServer)
+
+	boardClient := Board.NewBoardClient(shared.InitGrpcClientConn(BoardServiceAddr))
+	ironoreClient := Ironore.NewIronoreClient(shared.InitGrpcClientConn(IronoreServiceAddr))
+	Tools.RegisterToolsServer(grpcServer, NewToolsServer(boardClient, ironoreClient))
+
+	return grpcServer.Serve(lis)
+}
+
+func (s *ToolsServer) Produce(ctx context.Context, req *Tools.Request) (*Tools.Response, error) {
+	shared.SetGRPCHeader(&ctx)
+	ctx, span := shared.InitServerSpan(ctx, ServiceName)
+	defer span.End()
+	defer RequestCount.With(prometheus.Labels{
+		"service_name": ServiceName,
+		"node_name":    NodeName,
+	}).Inc()
+
+	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	ch := make(chan shared.GRPCResponse)
+	var mutex sync.Mutex
+
+	r := Tools.Response{}
+	for i := uint64(0); i < req.Quantity; i++ {
+		r.Quantity += 1
+
+		singleTool := Tools.Single{
+			Id:             shared.GenerateRandomUUID(),
+			RandomMetadata: shared.GenerateFakeMetadataString(ctx, req.ResponseSize),
+		}
+
+		go shared.ConcurrentGRPCBoard(ctx, s.boardClient, &wg, ch)
+		go shared.ConcurrentGRPCIronore(ctx, s.ironoreClient, &wg, ch)
+		go func() {
+			wg.Wait()
+			close(ch)
+		}()
+
+		for response := range ch {
+			mutex.Lock()
+			if response.Type == "board" {
+				singleTool.BoardId = response.Body
+			} else if response.Type == "ironore" {
+				singleTool.IronoreId = response.Body
+			}
+			mutex.Unlock()
+		}
+
+		r.Items = append(r.Items, &singleTool)
+
+		time.Sleep(time.Duration(latency) * time.Millisecond)
+	}
+
+	span.SetStatus(codes.Ok, "success")
+	return &r, nil
+}
+
+// --------------- HTTP Methods ---------------
+
+func newHTTPServer(lis net.Listener) error {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/", Produce)
+	mux.Handle("/metrics", promhttp.Handler())
+
+	s := &http.Server{Handler: mux}
+	return s.Serve(lis)
+}
+
+func Produce(w http.ResponseWriter, r *http.Request) {
+	ctx, span := shared.InitServerSpan(context.Background(), ServiceName)
+	defer span.End()
+	defer RequestCount.With(prometheus.Labels{
+		"service_name": ServiceName,
+		"node_name":    NodeName,
+	}).Inc()
+
+	r.WithContext(ctx)
+	w.Header().Set("Content-Type", "application/json")
+
+	var quantity uint64
+	quantity, err := strconv.ParseUint(r.URL.Query().Get("quantity"), 10, 64)
+	if err != nil {
+		quantity = 1
+	}
+
+	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	ch := make(chan shared.HTTPResponse)
+	responses := make(map[string]shared.HTTPResponse)
+	var mutex sync.Mutex
+
+	response := shared.ToolsHTTPResponse{
+		Type: ServiceName,
+	}
+	for i := uint64(0); i < quantity; i++ {
+		response.Quantity += 1
+
+		singleTool := shared.SingleTool{
+			Id:             shared.GenerateRandomUUID(),
+			RandomMetadata: shared.GenerateFakeMetadataString(ctx, r.URL.Query().Get("response_size")),
+		}
+
+		go shared.ConcurrentHTTPRequest("http://"+BoardServiceAddr, "board", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+IronoreServiceAddr, "ironore", &wg, ch)
+		go func() {
+			wg.Wait()
+			close(ch)
+		}()
+
+		for response := range ch {
+			mutex.Lock()
+			responses[response.Type] = response
+			mutex.Unlock()
+		}
+
+		for url, response := range responses {
+			if response.Err != nil {
+				fmt.Printf("Error fetching %s: %v\n", url, response.Err)
+				w.Write([]byte(err.Error()))
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			} else {
+				fmt.Printf("Response from %s: %s\n", url, response.Body)
+				if response.Type == "board" {
+					var board shared.BoardHTTPResponse
+					err := json.Unmarshal(response.Body, &board)
+					if err != nil {
+						w.Write([]byte(err.Error()))
+						w.WriteHeader(http.StatusInternalServerError)
+						return
+					}
+					singleTool.BoardId = board.Items[0].Id
+				} else if response.Type == "ironore" {
+					var ironore shared.CoalHTTPResponse
+					err := json.Unmarshal(response.Body, &ironore)
+					if err != nil {
+						w.Write([]byte(err.Error()))
+						w.WriteHeader(http.StatusInternalServerError)
+						return
+					}
+					singleTool.IronoreId = ironore.Items[0].Id
+				}
+			}
+		}
+
+		response.Items = append(response.Items, singleTool)
+
+		time.Sleep(time.Duration(latency) * time.Millisecond)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+// --------------- Main Logic ---------------
+
+func main() {
+	logger := shared.InitSugaredLogger()
+	shared.ConfigureRuntime()
+	prometheus.MustRegister(RequestCount)
+
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", ServicePort))
+	if err != nil {
+		logger.Fatalf("could not attach listener to port: %v. %v", ServicePort, err)
+	}
+
+	mux := cmux.New(listener)
+	grpcListener := mux.Match(cmux.HTTP2HeaderField("content-type", "application/grpc"))
+	httpListener := mux.Match(cmux.HTTP1Fast())
+
+	// Use an error group to start all of them
+	g := errgroup.Group{}
+	g.Go(func() error { return newGRPCServer(grpcListener) })
+	g.Go(func() error { return newHTTPServer(httpListener) })
+	g.Go(func() error { return mux.Serve() })
+
+	log.Println("run server:", g.Wait())
+}

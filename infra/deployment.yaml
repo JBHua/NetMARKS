@@ -525,3 +525,34 @@ spec:
                   fieldPath: spec.nodeName
 #      schedulerName: netmark-scheduler
 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-tools
+  labels:
+    app: netmarks-tools
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-tools
+  template:
+    metadata:
+      labels:
+        app: netmarks-tools
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      containers:
+        - name: netmarks-tools
+          image: tools:0.4.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+#      schedulerName: netmark-scheduler
+---
