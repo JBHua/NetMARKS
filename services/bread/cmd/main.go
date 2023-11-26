@@ -85,8 +85,8 @@ func (s *BreadServer) Produce(ctx context.Context, req *Bread.Request) (*Bread.R
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, req.ResponseSize),
 		}
 
-		go shared.ConcurrentGRPCWater(ctx, s.waterClient, &wg, ch)
-		go shared.ConcurrentGRPCFlour(ctx, s.flourClient, &wg, ch)
+		go shared.ConcurrentGRPCWater(ctx, req.ResponseSize, s.waterClient, &wg, ch)
+		go shared.ConcurrentGRPCFlour(ctx, req.ResponseSize, s.flourClient, &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)
@@ -139,6 +139,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		quantity = 1
 	}
+	responseSize := r.URL.Query().Get("response_size")
 
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
@@ -157,11 +158,11 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 
 		product := shared.SingleBread{
 			Id:             shared.GenerateRandomUUID(),
-			RandomMetadata: shared.GenerateFakeMetadataString(ctx, r.URL.Query().Get("response_size")),
+			RandomMetadata: shared.GenerateFakeMetadataString(ctx, responseSize),
 		}
 
-		go shared.ConcurrentHTTPRequest("http://"+FlourServiceAddr, "grain", &wg, ch)
-		go shared.ConcurrentHTTPRequest("http://"+WaterServiceAddr, "water", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+FlourServiceAddr+"?response_size="+responseSize, "grain", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+WaterServiceAddr+"?response_size="+responseSize, "water", &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)

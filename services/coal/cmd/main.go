@@ -91,9 +91,9 @@ func (s *CoalServer) Produce(ctx context.Context, req *Coal.Request) (*Coal.Resp
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, req.ResponseSize),
 		}
 
-		go shared.ConcurrentGRPCBread(ctx, s.breadClient, &wg, ch)
-		go shared.ConcurrentGRPCFish(ctx, s.fishClient, &wg, ch)
-		go shared.ConcurrentGRPCMeat(ctx, s.meatClient, &wg, ch)
+		go shared.ConcurrentGRPCBread(ctx, req.ResponseSize, s.breadClient, &wg, ch)
+		go shared.ConcurrentGRPCFish(ctx, req.ResponseSize, s.fishClient, &wg, ch)
+		go shared.ConcurrentGRPCMeat(ctx, req.ResponseSize, s.meatClient, &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)
@@ -148,6 +148,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		quantity = 1
 	}
+	responseSize := r.URL.Query().Get("response_size")
 
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
@@ -166,12 +167,12 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 
 		product := shared.SingleCoal{
 			Id:             shared.GenerateRandomUUID(),
-			RandomMetadata: shared.GenerateFakeMetadataString(ctx, r.URL.Query().Get("response_size")),
+			RandomMetadata: shared.GenerateFakeMetadataString(ctx, responseSize),
 		}
 
-		go shared.ConcurrentHTTPRequest("http://"+BreadServiceAddr, "bread", &wg, ch)
-		go shared.ConcurrentHTTPRequest("http://"+FishServiceAddr, "fish", &wg, ch)
-		go shared.ConcurrentHTTPRequest("http://"+MeatServiceAddr, "meat", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+BreadServiceAddr+"?response_size="+responseSize, "bread", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+FishServiceAddr+"?response_size="+responseSize, "fish", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+MeatServiceAddr+"?response_size="+responseSize, "meat", &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)

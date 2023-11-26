@@ -85,8 +85,8 @@ func (s *BeerServer) Produce(ctx context.Context, req *Beer.Request) (*Beer.Resp
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, req.ResponseSize),
 		}
 
-		go shared.ConcurrentGRPCWater(ctx, s.waterClient, &wg, ch)
-		go shared.ConcurrentGRPCGrain(ctx, s.grainClient, &wg, ch)
+		go shared.ConcurrentGRPCWater(ctx, req.ResponseSize, s.waterClient, &wg, ch)
+		go shared.ConcurrentGRPCGrain(ctx, req.ResponseSize, s.grainClient, &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)
@@ -140,6 +140,8 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 		quantity = 1
 	}
 
+	responseSize := r.URL.Query().Get("response_size")
+
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
 	var wg sync.WaitGroup
@@ -157,21 +159,15 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 
 		singleBeer := shared.SingleBeer{
 			Id:             shared.GenerateRandomUUID(),
-			RandomMetadata: shared.GenerateFakeMetadataString(ctx, r.URL.Query().Get("response_size")),
+			RandomMetadata: shared.GenerateFakeMetadataString(ctx, responseSize),
 		}
 
-		go shared.ConcurrentHTTPRequest("http://"+GrainServiceAddr, "grain", &wg, ch)
-		go shared.ConcurrentHTTPRequest("http://"+WaterServiceAddr, "water", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+GrainServiceAddr+"?response_size="+responseSize, "grain", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+WaterServiceAddr+"?response_size="+responseSize, "water", &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)
 		}()
-
-		//for response := range ch {
-		//	mutex.Lock()
-		//	responses[response.Type] = response
-		//	mutex.Unlock()
-		//}
 
 		for response := range ch {
 			mutex.Lock()

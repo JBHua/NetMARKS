@@ -85,8 +85,8 @@ func (s *ToolsServer) Produce(ctx context.Context, req *Tools.Request) (*Tools.R
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, req.ResponseSize),
 		}
 
-		go shared.ConcurrentGRPCBoard(ctx, s.boardClient, &wg, ch)
-		go shared.ConcurrentGRPCIronore(ctx, s.ironoreClient, &wg, ch)
+		go shared.ConcurrentGRPCBoard(ctx, req.ResponseSize, s.boardClient, &wg, ch)
+		go shared.ConcurrentGRPCIronore(ctx, req.ResponseSize, s.ironoreClient, &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)
@@ -140,6 +140,8 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 		quantity = 1
 	}
 
+	responseSize := r.URL.Query().Get("response_size")
+
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
 	var wg sync.WaitGroup
@@ -157,11 +159,11 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 
 		singleTool := shared.SingleTool{
 			Id:             shared.GenerateRandomUUID(),
-			RandomMetadata: shared.GenerateFakeMetadataString(ctx, r.URL.Query().Get("response_size")),
+			RandomMetadata: shared.GenerateFakeMetadataString(ctx, responseSize),
 		}
 
-		go shared.ConcurrentHTTPRequest("http://"+BoardServiceAddr, "board", &wg, ch)
-		go shared.ConcurrentHTTPRequest("http://"+IronoreServiceAddr, "ironore", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+BoardServiceAddr+"?response_size="+responseSize, "board", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+IronoreServiceAddr+"?response_size="+responseSize, "ironore", &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)

@@ -69,7 +69,7 @@ func (s *LogServer) Produce(ctx context.Context, req *Log.Request) (*Log.Respons
 
 		singleTree, err := s.treeClient.Produce(ctx, &Tree.Request{
 			Quantity:     1,
-			ResponseSize: "1",
+			ResponseSize: req.ResponseSize,
 		})
 		if err != nil {
 			return nil, err
@@ -117,6 +117,8 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 		quantity = 1
 	}
 
+	responseSize := r.URL.Query().Get("response_size")
+
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
 	response := shared.LogHTTPResponse{
@@ -125,7 +127,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 	for i := uint64(0); i < quantity; i++ {
 		response.Quantity += 1
 
-		getRes, err := http.Get("http://" + TreeServiceAddr + "?quantity=1&response_size=1")
+		getRes, err := http.Get("http://" + TreeServiceAddr + "?response_size=" + responseSize)
 		if err != nil {
 			w.Write([]byte(err.Error()))
 			w.WriteHeader(http.StatusInternalServerError)
@@ -143,7 +145,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 
 		response.Items = append(response.Items, shared.SingleLog{
 			Id:             shared.GenerateRandomUUID(),
-			RandomMetadata: shared.GenerateFakeMetadataString(ctx, r.URL.Query().Get("response_size")),
+			RandomMetadata: shared.GenerateFakeMetadataString(ctx, responseSize),
 			TreeId:         grain.Items[0].Id,
 		})
 

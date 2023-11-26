@@ -69,7 +69,7 @@ func (s *FlourServer) Produce(ctx context.Context, req *Flour.Request) (*Flour.R
 
 		singleGrain, err := s.grainClient.Produce(ctx, &Grain.Request{
 			Quantity:     1,
-			ResponseSize: "1",
+			ResponseSize: req.ResponseSize,
 		})
 		if err != nil {
 			return nil, err
@@ -116,6 +116,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		quantity = 1
 	}
+	responseSize := r.URL.Query().Get("response_size")
 
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
@@ -125,7 +126,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 	for i := uint64(0); i < quantity; i++ {
 		response.Quantity += 1
 
-		getRes, err := http.Get("http://" + GrainServiceAddr + "?quantity=1&response_size=1")
+		getRes, err := http.Get("http://" + GrainServiceAddr + "?response_size=" + responseSize)
 		if err != nil {
 			w.Write([]byte(err.Error()))
 			w.WriteHeader(http.StatusInternalServerError)
@@ -143,7 +144,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 
 		response.Items = append(response.Items, shared.SingleFour{
 			Id:             shared.GenerateRandomUUID(),
-			RandomMetadata: shared.GenerateFakeMetadataString(ctx, r.URL.Query().Get("response_size")),
+			RandomMetadata: shared.GenerateFakeMetadataString(ctx, responseSize),
 			GrainId:        grain.Items[0].Id,
 		})
 

@@ -85,8 +85,8 @@ func (s *CoinServer) Produce(ctx context.Context, req *Coin.Request) (*Coin.Resp
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, req.ResponseSize),
 		}
 
-		go shared.ConcurrentGRPCCoal(ctx, s.coalClient, &wg, ch)
-		go shared.ConcurrentGRPCGold(ctx, s.goldClient, &wg, ch)
+		go shared.ConcurrentGRPCCoal(ctx, req.ResponseSize, s.coalClient, &wg, ch)
+		go shared.ConcurrentGRPCGold(ctx, req.ResponseSize, s.goldClient, &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)
@@ -139,6 +139,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		quantity = 1
 	}
+	responseSize := r.URL.Query().Get("response_size")
 
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
@@ -157,11 +158,11 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 
 		singleCoin := shared.SingleCoin{
 			Id:             shared.GenerateRandomUUID(),
-			RandomMetadata: shared.GenerateFakeMetadataString(ctx, r.URL.Query().Get("response_size")),
+			RandomMetadata: shared.GenerateFakeMetadataString(ctx, responseSize),
 		}
 
-		go shared.ConcurrentHTTPRequest("http://"+CoalServiceAddr, "coal", &wg, ch)
-		go shared.ConcurrentHTTPRequest("http://"+GoldServiceAddr, "gold", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+CoalServiceAddr+"?response_size="+responseSize, "coal", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+GoldServiceAddr+"?response_size="+responseSize, "gold", &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)

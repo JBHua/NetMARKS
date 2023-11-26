@@ -101,6 +101,8 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 		quantity = 1
 	}
 
+	responseSize := r.URL.Query().Get("response_size")
+
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
 	response := shared.BasicTypeHTTPResponse{
@@ -110,7 +112,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 		response.Quantity += 1
 		response.Items = append(response.Items, shared.SingleBasicType{
 			Id:             shared.GenerateRandomUUID(),
-			RandomMetadata: shared.GenerateFakeMetadataString(ctx, r.URL.Query().Get("response_size")),
+			RandomMetadata: shared.GenerateFakeMetadataString(ctx, responseSize),
 		})
 
 		time.Sleep(time.Duration(latency) * time.Millisecond)

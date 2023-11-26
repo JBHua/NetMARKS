@@ -107,13 +107,13 @@ type GRPCResponse struct {
 	Err  error
 }
 
-func ConcurrentGRPCWater(ctx context.Context, client Water.WaterClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
+func ConcurrentGRPCWater(ctx context.Context, size string, client Water.WaterClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
 	t := "water"
 	defer wg.Done()
 
 	produce, err := client.Produce(ctx, &Water.Request{
 		Quantity:     1,
-		ResponseSize: "1",
+		ResponseSize: size,
 	})
 	if err != nil {
 		ch <- GRPCResponse{Type: t, Err: err}
@@ -123,13 +123,13 @@ func ConcurrentGRPCWater(ctx context.Context, client Water.WaterClient, wg *sync
 	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
 }
 
-func ConcurrentGRPCGrain(ctx context.Context, client Grain.GrainClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
+func ConcurrentGRPCGrain(ctx context.Context, size string, client Grain.GrainClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
 	t := "grain"
 	defer wg.Done()
 
 	produce, err := client.Produce(ctx, &Grain.Request{
 		Quantity:     1,
-		ResponseSize: "1",
+		ResponseSize: size,
 	})
 	if err != nil {
 		ch <- GRPCResponse{Type: t, Err: err}
@@ -139,13 +139,13 @@ func ConcurrentGRPCGrain(ctx context.Context, client Grain.GrainClient, wg *sync
 	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
 }
 
-func ConcurrentGRPCFlour(ctx context.Context, client Flour.FlourClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
+func ConcurrentGRPCFlour(ctx context.Context, size string, client Flour.FlourClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
 	t := "flour"
 	defer wg.Done()
 
 	produce, err := client.Produce(ctx, &Flour.Request{
 		Quantity:     1,
-		ResponseSize: "1",
+		ResponseSize: size,
 	})
 	if err != nil {
 		ch <- GRPCResponse{Type: t, Err: err}
@@ -155,13 +155,13 @@ func ConcurrentGRPCFlour(ctx context.Context, client Flour.FlourClient, wg *sync
 	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
 }
 
-func ConcurrentGRPCBread(ctx context.Context, client Bread.BreadClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
+func ConcurrentGRPCBread(ctx context.Context, size string, client Bread.BreadClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
 	t := "bread"
 	defer wg.Done()
 
 	produce, err := client.Produce(ctx, &Bread.Request{
 		Quantity:     1,
-		ResponseSize: "1",
+		ResponseSize: size,
 	})
 	if err != nil {
 		ch <- GRPCResponse{Type: t, Err: err}
@@ -171,13 +171,13 @@ func ConcurrentGRPCBread(ctx context.Context, client Bread.BreadClient, wg *sync
 	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
 }
 
-func ConcurrentGRPCFish(ctx context.Context, client Fish.FishClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
+func ConcurrentGRPCFish(ctx context.Context, size string, client Fish.FishClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
 	t := "fish"
 	defer wg.Done()
 
 	produce, err := client.Produce(ctx, &Fish.Request{
 		Quantity:     1,
-		ResponseSize: "1",
+		ResponseSize: size,
 	})
 	if err != nil {
 		ch <- GRPCResponse{Type: t, Err: err}
@@ -187,13 +187,13 @@ func ConcurrentGRPCFish(ctx context.Context, client Fish.FishClient, wg *sync.Wa
 	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
 }
 
-func ConcurrentGRPCMeat(ctx context.Context, client Meat.MeatClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
+func ConcurrentGRPCMeat(ctx context.Context, size string, client Meat.MeatClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
 	t := "meat"
 	defer wg.Done()
 
 	produce, err := client.Produce(ctx, &Meat.Request{
 		Quantity:     1,
-		ResponseSize: "1",
+		ResponseSize: size,
 	})
 	if err != nil {
 		ch <- GRPCResponse{Type: t, Err: err}
@@ -203,13 +203,13 @@ func ConcurrentGRPCMeat(ctx context.Context, client Meat.MeatClient, wg *sync.Wa
 	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
 }
 
-func ConcurrentGRPCCoal(ctx context.Context, client Coal.CoalClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
+func ConcurrentGRPCCoal(ctx context.Context, size string, client Coal.CoalClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
 	t := "coal"
 	defer wg.Done()
 
 	produce, err := client.Produce(ctx, &Coal.Request{
 		Quantity:     1,
-		ResponseSize: "1",
+		ResponseSize: size,
 	})
 	if err != nil {
 		ch <- GRPCResponse{Type: t, Err: err}
@@ -219,13 +219,13 @@ func ConcurrentGRPCCoal(ctx context.Context, client Coal.CoalClient, wg *sync.Wa
 	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
 }
 
-func ConcurrentGRPCGold(ctx context.Context, client Gold.GoldClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
+func ConcurrentGRPCGold(ctx context.Context, size string, client Gold.GoldClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
 	t := "gold"
 	defer wg.Done()
 
 	produce, err := client.Produce(ctx, &Gold.Request{
 		Quantity:     1,
-		ResponseSize: "1",
+		ResponseSize: size,
 	})
 	if err != nil {
 		ch <- GRPCResponse{Type: t, Err: err}
@@ -235,13 +235,13 @@ func ConcurrentGRPCGold(ctx context.Context, client Gold.GoldClient, wg *sync.Wa
 	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
 }
 
-func ConcurrentGRPCIronore(ctx context.Context, client Ironore.IronoreClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
+func ConcurrentGRPCIronore(ctx context.Context, size string, client Ironore.IronoreClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
 	t := "gold"
 	defer wg.Done()
 
 	produce, err := client.Produce(ctx, &Ironore.Request{
 		Quantity:     1,
-		ResponseSize: "1",
+		ResponseSize: size,
 	})
 	if err != nil {
 		ch <- GRPCResponse{Type: t, Err: err}
@@ -251,13 +251,13 @@ func ConcurrentGRPCIronore(ctx context.Context, client Ironore.IronoreClient, wg
 	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
 }
 
-func ConcurrentGRPCBoard(ctx context.Context, client Board.BoardClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
+func ConcurrentGRPCBoard(ctx context.Context, size string, client Board.BoardClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
 	t := "gold"
 	defer wg.Done()
 
 	produce, err := client.Produce(ctx, &Board.Request{
 		Quantity:     1,
-		ResponseSize: "1",
+		ResponseSize: size,
 	})
 	if err != nil {
 		ch <- GRPCResponse{Type: t, Err: err}
@@ -267,13 +267,13 @@ func ConcurrentGRPCBoard(ctx context.Context, client Board.BoardClient, wg *sync
 	ch <- GRPCResponse{Type: t, Body: produce.Items[0].Id}
 }
 
-func ConcurrentGRPCIron(ctx context.Context, client Iron.IronClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
+func ConcurrentGRPCIron(ctx context.Context, size string, client Iron.IronClient, wg *sync.WaitGroup, ch chan<- GRPCResponse) {
 	t := "gold"
 	defer wg.Done()
 
 	produce, err := client.Produce(ctx, &Iron.Request{
 		Quantity:     1,
-		ResponseSize: "1",
+		ResponseSize: size,
 	})
 	if err != nil {
 		ch <- GRPCResponse{Type: t, Err: err}

@@ -85,8 +85,8 @@ func (s *SwordServer) Produce(ctx context.Context, req *Sword.Request) (*Sword.R
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, req.ResponseSize),
 		}
 
-		go shared.ConcurrentGRPCCoal(ctx, s.coalClient, &wg, ch)
-		go shared.ConcurrentGRPCIron(ctx, s.ironClient, &wg, ch)
+		go shared.ConcurrentGRPCCoal(ctx, req.ResponseSize, s.coalClient, &wg, ch)
+		go shared.ConcurrentGRPCIron(ctx, req.ResponseSize, s.ironClient, &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)
@@ -140,6 +140,8 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 		quantity = 1
 	}
 
+	responseSize := r.URL.Query().Get("response_size")
+
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
 	var wg sync.WaitGroup
@@ -157,11 +159,11 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 
 		singleSword := shared.SingleSword{
 			Id:             shared.GenerateRandomUUID(),
-			RandomMetadata: shared.GenerateFakeMetadataString(ctx, r.URL.Query().Get("response_size")),
+			RandomMetadata: shared.GenerateFakeMetadataString(ctx, responseSize),
 		}
 
-		go shared.ConcurrentHTTPRequest("http://"+CoalServiceAddr, "coal", &wg, ch)
-		go shared.ConcurrentHTTPRequest("http://"+IronServiceAddr, "iron", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+CoalServiceAddr+"?response_size="+responseSize, "coal", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+IronServiceAddr+"?response_size="+responseSize, "iron", &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)
