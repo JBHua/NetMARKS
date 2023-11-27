@@ -1,0 +1,19 @@
+netmarks-beer,                  http://127.0.0.1:50008
+netmarks-board,                 http://127.0.0.1:50010
+netmarks-boat  ,                http://127.0.0.1:50012
+netmarks-bread  ,               http://127.0.0.1:50014
+netmarks-coal    ,              http://127.0.0.1:50016
+netmarks-coin     ,             http://127.0.0.1:50018
+netmarks-fish      ,            http://127.0.0.1:50020
+netmarks-flour      ,           http://127.0.0.1:50022
+netmarks-gold        ,          http://127.0.0.1:50024
+netmarks-grain        ,         http://127.0.0.1:50026
+netmarks-iron          ,        http://127.0.0.1:50028
+netmarks-ironore        ,       http://127.0.0.1:50030
+netmarks-log             ,      http://127.0.0.1:50032
+netmarks-meat             ,     http://127.0.0.1:50034
+netmarks-pig               ,    http://127.0.0.1:50036
+netmarks-sword              ,   http://127.0.0.1:50038
+netmarks-tools               ,  http://127.0.0.1:50040
+netmarks-tree                 , http://127.0.0.1:50042
+netmarks-water                 ,http://127.0.0.1:50044
