@@ -22,7 +22,7 @@ import (
 )
 
 const ServiceName = "Water"
-const ServicePort = "8080"
+const ServicePort = "8081"
 
 var NodeName = os.Getenv("K8S_NODE_NAME")
 var RequestCount = shared.InitPrometheusRequestCountMetrics()
@@ -131,6 +131,7 @@ func ProduceFishHTTP(w http.ResponseWriter, r *http.Request) {
 func main() {
 	logger := shared.InitSugaredLogger()
 	shared.ConfigureRuntime()
+	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 200
 	prometheus.MustRegister(RequestCount)
 
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", ServicePort))

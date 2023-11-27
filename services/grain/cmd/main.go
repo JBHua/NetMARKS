@@ -22,7 +22,7 @@ import (
 )
 
 const ServiceName = "Grain"
-const ServicePort = "8080"
+const ServicePort = "8082"
 
 var NodeName = os.Getenv("K8S_NODE_NAME")
 var RequestCount = shared.InitPrometheusRequestCountMetrics()
@@ -126,6 +126,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 func main() {
 	logger := shared.InitSugaredLogger()
 	shared.ConfigureRuntime()
+	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 200
 	prometheus.MustRegister(RequestCount)
 
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", ServicePort))

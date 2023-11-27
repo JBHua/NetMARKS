@@ -27,8 +27,10 @@ import (
 const ServiceName = "Beer"
 const ServicePort = "8080"
 
-const GrainServiceAddr = "netmarks-grain.default.svc.cluster.local:8080"
-const WaterServiceAddr = "netmarks-water.default.svc.cluster.local:8080"
+// const GrainServiceAddr = "netmarks-grain.default.svc.cluster.local:8080"
+// const WaterServiceAddr = "netmarks-water.default.svc.cluster.local:8080"
+const GrainServiceAddr = "127.0.0.1:8082"
+const WaterServiceAddr = "127.0.0.1:8081"
 
 var NodeName = os.Getenv("K8S_NODE_NAME")
 var RequestCount = shared.InitPrometheusRequestCountMetrics()
@@ -182,7 +184,6 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			} else {
-				fmt.Printf("Response from %s: %s\n", url, response.Body)
 				if response.Type == "water" {
 					var water shared.BasicTypeHTTPResponse
 					err := json.Unmarshal(response.Body, &water)
@@ -219,6 +220,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 func main() {
 	logger := shared.InitSugaredLogger()
 	shared.ConfigureRuntime()
+	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 200
 	prometheus.MustRegister(RequestCount)
 
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", ServicePort))

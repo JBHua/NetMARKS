@@ -160,6 +160,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 func main() {
 	logger := shared.InitSugaredLogger()
 	shared.ConfigureRuntime()
+	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 200
 	prometheus.MustRegister(RequestCount)
 
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", ServicePort))

@@ -181,7 +181,6 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			} else {
-				fmt.Printf("Response from %s: %s\n", url, response.Body)
 				if response.Type == "water" {
 					var water shared.BasicTypeHTTPResponse
 					err := json.Unmarshal(response.Body, &water)
@@ -218,6 +217,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 func main() {
 	logger := shared.InitSugaredLogger()
 	shared.ConfigureRuntime()
+	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 200
 	prometheus.MustRegister(RequestCount)
 
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", ServicePort))
