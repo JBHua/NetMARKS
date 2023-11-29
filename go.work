@@ -24,4 +24,5 @@ use (
 	services/sword
 
 	netmark-scheduler
+	netmark-scoring
 )
