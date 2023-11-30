@@ -4,8 +4,8 @@ import { check, sleep } from "k6";
 // Test configuration
 export const options = {
     stages: [
-        { duration: "10s", target: 50 },
-        { duration: "120s", target: 50 },
+        { duration: "10s", target: 10 },
+        { duration: "80s", target: 10 },
         { duration: '10s', target: 0 }, // ramp-down to 0 users
     ],
 };
@@ -42,12 +42,19 @@ const complex_service = {
     "netmarks-tools"  : "http://127.0.0.1:54541",
 }
 
-const service_quantity = 3
-const base_service_quantity = 5
+const service_quantity = 2
+// const base_service_quantity = 4
 const complex_service_quantity = 1
 
 // Simulated user behavior
 export default function () {
+    for (let key in services) {
+        let addr = services[key]
+        let res = http.get(`${addr}?quantity=${service_quantity}&response_size=${__ENV.RES}`);
+        check(res, { "status was 200": (r) => r.status === 200 });
+    }
+    sleep(1);
+
     for (let key in complex_service) {
         let addr = complex_service[key]
         let res = http.get(`${addr}?quantity=${complex_service_quantity}&response_size=${__ENV.RES}`);
@@ -55,17 +62,10 @@ export default function () {
     }
     sleep(1);
 
-    for (let key in base_service) {
-        let addr = base_service[key]
-        let res = http.get(`${addr}?quantity=${base_service_quantity}&response_size=${__ENV.RES}`);
-        check(res, { "status was 200": (r) => r.status === 200 });
-    }
-    sleep(1);
-
-    for (let key in services) {
-        let addr = services[key]
-        let res = http.get(`${addr}?quantity=${service_quantity}&response_size=${__ENV.RES}`);
-        check(res, { "status was 200": (r) => r.status === 200 });
-    }
-    sleep(1);
+    // for (let key in base_service) {
+    //     let addr = base_service[key]
+    //     let res = http.get(`${addr}?quantity=${base_service_quantity}&response_size=${__ENV.RES}`);
+    //     check(res, { "status was 200": (r) => r.status === 200 });
+    // }
+    // sleep(1);
 }

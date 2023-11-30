@@ -22,7 +22,7 @@ import (
 )
 
 const ServiceName = "Grain"
-const ServicePort = "8082"
+const ServicePort = "8080"
 
 var NodeName = os.Getenv("K8S_NODE_NAME")
 var RequestCount = shared.InitPrometheusRequestCountMetrics()

@@ -27,10 +27,8 @@ import (
 const ServiceName = "Beer"
 const ServicePort = "8080"
 
-// const GrainServiceAddr = "netmarks-grain.default.svc.cluster.local:8080"
-// const WaterServiceAddr = "netmarks-water.default.svc.cluster.local:8080"
-const GrainServiceAddr = "127.0.0.1:8082"
-const WaterServiceAddr = "127.0.0.1:8081"
+const GrainServiceAddr = "netmarks-grain.default.svc.cluster.local:8080"
+const WaterServiceAddr = "netmarks-water.default.svc.cluster.local:8080"
 
 var NodeName = os.Getenv("K8S_NODE_NAME")
 var RequestCount = shared.InitPrometheusRequestCountMetrics()
