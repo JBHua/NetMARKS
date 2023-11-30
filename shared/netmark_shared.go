@@ -89,14 +89,40 @@ func InitInternalSpan(ctx context.Context) (context.Context, trace.Span) {
 
 // --------------- Prometheus Metrics ---------------
 
-func InitPrometheusRequestCountMetrics() *prometheus.CounterVec {
-	return prometheus.NewCounterVec(
+func InitPrometheusRequestCountMetrics() (*prometheus.CounterVec, *prometheus.CounterVec) {
+	requestCount := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "request_to_node_count",
 			Help: "Count the number of incoming requests to the particular node",
 		},
 		[]string{"service_name", "node_name"}, // Labels for the metric, if any
 	)
+
+	internodeRequestCount := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "request_to_node_count",
+			Help: "Count the number of incoming requests to the particular node",
+		},
+		[]string{"service_name", "node_name"}, // Labels for the metric, if any
+	)
+
+	return requestCount, internodeRequestCount
+}
+
+func UpdateRequestMetrics(requestCounter, interNodeRequestCounter *prometheus.CounterVec, originalRequestService, serviceName, upstreamNodeName, nodeName string) {
+	IncreaseRequestCount(requestCounter, originalRequestService, serviceName, nodeName)
+
+	if upstreamNodeName != nodeName {
+		IncreaseInterNodeRequestCount(interNodeRequestCounter, originalRequestService, serviceName, nodeName)
+	}
+}
+
+func IncreaseRequestCount(counter *prometheus.CounterVec, originalRequestService, serviceName, nodeName string) {
+
+}
+
+func IncreaseInterNodeRequestCount(counter *prometheus.CounterVec, originalRequestService, serviceName, nodeName string) {
+
 }
 
 // --------------- gRPC Related ---------------
@@ -306,10 +332,20 @@ type HTTPResponse struct {
 	Err  error
 }
 
-func ConcurrentHTTPRequest(url string, productType string, wg *sync.WaitGroup, ch chan<- HTTPResponse) {
+func ConcurrentHTTPRequest(url, productType, nodeName, requestID, originalRequestService string, wg *sync.WaitGroup, ch chan<- HTTPResponse) {
 	defer wg.Done()
 
-	resp, err := http.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		ch <- HTTPResponse{Type: productType, Err: err}
+		return
+	}
+
+	req.Header.Set("upstream-node-name", nodeName)
+	req.Header.Set("original-request-service", originalRequestService)
+	req.Header.Set("request-id", requestID)
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		ch <- HTTPResponse{Type: productType, Err: err}
 		return
@@ -323,6 +359,37 @@ func ConcurrentHTTPRequest(url string, productType string, wg *sync.WaitGroup, c
 	}
 
 	ch <- HTTPResponse{Type: productType, Body: body}
+}
+
+func ExtractUpstreamRequestID(header http.Header, serviceName string, nodeName string) (string, string, string) {
+	var requestID string
+	var originalRequestService string
+	var upstreamNodeName string
+
+	id := header.Get("request-id")
+	if len(id) > 0 {
+		fmt.Printf("Getting Existing Request ID: %s\n", id)
+		requestID = id
+	} else {
+		fmt.Printf("No upstream request. Generating new id....")
+		requestID = GenerateRandomUUID()
+	}
+
+	originalService := header.Get("original-request-service")
+	if len(originalService) > 0 {
+		originalRequestService = originalService
+	} else {
+		originalService = serviceName
+	}
+
+	upstream := header.Get("upstream-node-name")
+	if len(upstream) > 0 {
+		upstreamNodeName = upstream
+	} else {
+		upstreamNodeName = nodeName
+	}
+
+	return requestID, originalRequestService, upstreamNodeName
 }
 
 // --------------- Shared Data Structure ---------------

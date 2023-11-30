@@ -156,13 +156,14 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 	for i := uint64(0); i < quantity; i++ {
 		response.Quantity += 1
 
+		requestId, originalRequestService, upstreamNodeName := shared.ExtractUpstreamRequestID(r.Header, ServiceName, NodeName)
 		product := shared.SingleBread{
-			Id:             shared.GenerateRandomUUID(),
+			Id:             requestId,
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, responseSize),
 		}
 
-		go shared.ConcurrentHTTPRequest("http://"+FlourServiceAddr+"?response_size="+responseSize, "grain", &wg, ch)
-		go shared.ConcurrentHTTPRequest("http://"+WaterServiceAddr+"?response_size="+responseSize, "water", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+FlourServiceAddr+"?response_size="+responseSize, "grain", NodeName, requestId, originalRequestService, &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+WaterServiceAddr+"?response_size="+responseSize, "water", NodeName, requestId, originalRequestService, &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)

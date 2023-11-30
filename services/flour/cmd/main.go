@@ -27,7 +27,7 @@ const ServicePort = "8080"
 const GrainServiceAddr = "netmarks-grain.default.svc.cluster.local:8080"
 
 var NodeName = os.Getenv("K8S_NODE_NAME")
-var RequestCount = shared.InitPrometheusRequestCountMetrics()
+var RequestCount, InterNodeRequestCount = shared.InitPrometheusRequestCountMetrics()
 
 // --------------- gRPC Methods ---------------
 
@@ -125,8 +125,14 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 	}
 	for i := uint64(0); i < quantity; i++ {
 		response.Quantity += 1
+		requestId, originalRequestService, upstreamNodeName := shared.ExtractUpstreamRequestID(r.Header, ServiceName, NodeName)
 
-		getRes, err := http.Get("http://" + GrainServiceAddr + "?response_size=" + responseSize)
+		req, _ := http.NewRequest("GET", "http://"+GrainServiceAddr+"?response_size="+responseSize, nil)
+		req.Header.Set("upstream-node-name", NodeName)
+		req.Header.Set("original-request-service", originalRequestService)
+		req.Header.Set("request-id", requestId)
+
+		getRes, err := http.DefaultClient.Do(req)
 		if err != nil {
 			w.Write([]byte(err.Error()))
 			w.WriteHeader(http.StatusInternalServerError)
@@ -147,6 +153,8 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, responseSize),
 			GrainId:        grain.Items[0].Id,
 		})
+
+		shared.UpdateRequestMetrics(RequestCount, InterNodeRequestCount, originalRequestService, ServiceName, NodeName, upstreamNodeName)
 
 		time.Sleep(time.Duration(latency) * time.Millisecond)
 	}

@@ -165,14 +165,15 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 	for i := uint64(0); i < quantity; i++ {
 		response.Quantity += 1
 
+		requestId, originalRequestService, upstreamNodeName := shared.ExtractUpstreamRequestID(r.Header, ServiceName, NodeName)
 		product := shared.SingleCoal{
-			Id:             shared.GenerateRandomUUID(),
+			Id:             requestId,
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, responseSize),
 		}
 
-		go shared.ConcurrentHTTPRequest("http://"+BreadServiceAddr+"?response_size="+responseSize, "bread", &wg, ch)
-		go shared.ConcurrentHTTPRequest("http://"+FishServiceAddr+"?response_size="+responseSize, "fish", &wg, ch)
-		go shared.ConcurrentHTTPRequest("http://"+MeatServiceAddr+"?response_size="+responseSize, "meat", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+BreadServiceAddr+"?response_size="+responseSize, "bread", NodeName, requestId, originalRequestService, &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+FishServiceAddr+"?response_size="+responseSize, "fish", NodeName, requestId, originalRequestService, &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+MeatServiceAddr+"?response_size="+responseSize, "meat", NodeName, requestId, originalRequestService, &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)

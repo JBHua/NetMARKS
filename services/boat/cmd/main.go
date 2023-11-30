@@ -126,8 +126,14 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 	}
 	for i := uint64(0); i < quantity; i++ {
 		response.Quantity += 1
+		requestId, originalRequestService, upstreamNodeName := shared.ExtractUpstreamRequestID(r.Header, ServiceName, NodeName)
 
-		getRes, err := http.Get("http://" + BoardServiceAddr + "?response_size=" + responseSize)
+		req, _ := http.NewRequest("GET", "http://"+BoardServiceAddr+"?response_size="+responseSize, nil)
+		req.Header.Set("upstream-node-name", NodeName)
+		req.Header.Set("original-request-service", originalRequestService)
+		req.Header.Set("request-id", requestId)
+
+		getRes, err := http.DefaultClient.Do(req)
 		if err != nil {
 			w.Write([]byte(err.Error()))
 			w.WriteHeader(http.StatusInternalServerError)

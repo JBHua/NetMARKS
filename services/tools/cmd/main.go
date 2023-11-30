@@ -157,13 +157,14 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 	for i := uint64(0); i < quantity; i++ {
 		response.Quantity += 1
 
+		requestId, originalRequestService, upstreamNodeName := shared.ExtractUpstreamRequestID(r.Header, ServiceName, NodeName)
 		singleTool := shared.SingleTool{
-			Id:             shared.GenerateRandomUUID(),
+			Id:             requestId,
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, responseSize),
 		}
 
-		go shared.ConcurrentHTTPRequest("http://"+BoardServiceAddr+"?response_size="+responseSize, "board", &wg, ch)
-		go shared.ConcurrentHTTPRequest("http://"+IronoreServiceAddr+"?response_size="+responseSize, "ironore", &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+BoardServiceAddr+"?response_size="+responseSize, "board", NodeName, requestId, originalRequestService, &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+IronoreServiceAddr+"?response_size="+responseSize, "ironore", NodeName, requestId, originalRequestService, &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)
