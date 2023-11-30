@@ -56,10 +56,6 @@ func (s *FlourServer) Produce(ctx context.Context, req *Flour.Request) (*Flour.R
 	shared.SetGRPCHeader(&ctx)
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
 	defer span.End()
-	defer RequestCount.With(prometheus.Labels{
-		"service_name": ServiceName,
-		"node_name":    NodeName,
-	}).Inc()
 
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
@@ -103,10 +99,6 @@ func newHTTPServer(lis net.Listener) error {
 func Produce(w http.ResponseWriter, r *http.Request) {
 	ctx, span := shared.InitServerSpan(context.Background(), ServiceName)
 	defer span.End()
-	defer RequestCount.With(prometheus.Labels{
-		"service_name": ServiceName,
-		"node_name":    NodeName,
-	}).Inc()
 
 	r.WithContext(ctx)
 	w.Header().Set("Content-Type", "application/json")
@@ -155,7 +147,6 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 		})
 
 		shared.UpdateRequestMetrics(RequestCount, InterNodeRequestCount, originalRequestService, ServiceName, NodeName, upstreamNodeName)
-
 		time.Sleep(time.Duration(latency) * time.Millisecond)
 	}
 

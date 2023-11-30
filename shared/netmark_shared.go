@@ -92,37 +92,38 @@ func InitInternalSpan(ctx context.Context) (context.Context, trace.Span) {
 func InitPrometheusRequestCountMetrics() (*prometheus.CounterVec, *prometheus.CounterVec) {
 	requestCount := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "request_to_node_count",
-			Help: "Count the number of incoming requests to the particular node",
+			Name: "sub_request_count_per_service",
+			Help: "Count the number of sub-request for a specific service",
 		},
-		[]string{"service_name", "node_name"}, // Labels for the metric, if any
+		[]string{"service_name", "node_name", "upstream_node_name", "original_request_service"},
 	)
 
-	internodeRequestCount := prometheus.NewCounterVec(
+	interNodeRequestCount := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "request_to_node_count",
-			Help: "Count the number of incoming requests to the particular node",
+			Name: "inter_node_sub_request_count_per_service",
+			Help: "Count the number of sub-request coming from another node for a service",
 		},
-		[]string{"service_name", "node_name"}, // Labels for the metric, if any
+		[]string{"service_name", "node_name", "upstream_node_name", "original_request_service"},
 	)
 
-	return requestCount, internodeRequestCount
+	return requestCount, interNodeRequestCount
 }
 
 func UpdateRequestMetrics(requestCounter, interNodeRequestCounter *prometheus.CounterVec, originalRequestService, serviceName, upstreamNodeName, nodeName string) {
-	IncreaseRequestCount(requestCounter, originalRequestService, serviceName, nodeName)
+	IncreaseRequestCount(requestCounter, originalRequestService, serviceName, upstreamNodeName, nodeName)
 
 	if upstreamNodeName != nodeName {
-		IncreaseInterNodeRequestCount(interNodeRequestCounter, originalRequestService, serviceName, nodeName)
+		IncreaseRequestCount(interNodeRequestCounter, originalRequestService, serviceName, upstreamNodeName, nodeName)
 	}
 }
 
-func IncreaseRequestCount(counter *prometheus.CounterVec, originalRequestService, serviceName, nodeName string) {
-
-}
-
-func IncreaseInterNodeRequestCount(counter *prometheus.CounterVec, originalRequestService, serviceName, nodeName string) {
-
+func IncreaseRequestCount(counter *prometheus.CounterVec, originalRequestService, serviceName, upstreamNodeName, nodeName string) {
+	counter.With(prometheus.Labels{
+		"service_name":             serviceName,
+		"node_name":                nodeName,
+		"upstream_node_name":       upstreamNodeName,
+		"original_request_service": originalRequestService,
+	}).Inc()
 }
 
 // --------------- gRPC Related ---------------

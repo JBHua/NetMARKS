@@ -27,7 +27,7 @@ const ServicePort = "8080"
 const TreeServiceAddr = "netmarks-tree.default.svc.cluster.local:8080"
 
 var NodeName = os.Getenv("K8S_NODE_NAME")
-var RequestCount = shared.InitPrometheusRequestCountMetrics()
+var RequestCount, InterNodeRequestCount = shared.InitPrometheusRequestCountMetrics()
 
 // --------------- gRPC Methods ---------------
 
@@ -56,10 +56,6 @@ func (s *LogServer) Produce(ctx context.Context, req *Log.Request) (*Log.Respons
 	shared.SetGRPCHeader(&ctx)
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
 	defer span.End()
-	defer RequestCount.With(prometheus.Labels{
-		"service_name": ServiceName,
-		"node_name":    NodeName,
-	}).Inc()
 
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 
@@ -103,10 +99,6 @@ func newHTTPServer(lis net.Listener) error {
 func Produce(w http.ResponseWriter, r *http.Request) {
 	ctx, span := shared.InitServerSpan(context.Background(), ServiceName)
 	defer span.End()
-	defer RequestCount.With(prometheus.Labels{
-		"service_name": ServiceName,
-		"node_name":    NodeName,
-	}).Inc()
 
 	r.WithContext(ctx)
 	w.Header().Set("Content-Type", "application/json")
@@ -155,6 +147,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 			TreeId:         grain.Items[0].Id,
 		})
 
+		shared.UpdateRequestMetrics(RequestCount, InterNodeRequestCount, originalRequestService, ServiceName, NodeName, upstreamNodeName)
 		time.Sleep(time.Duration(latency) * time.Millisecond)
 	}
 
