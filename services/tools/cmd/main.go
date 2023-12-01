@@ -2,7 +2,7 @@ package main
 
 import (
 	Board "NetMARKS/services/board/proto"
-	Ironore "NetMARKS/services/ironore/proto"
+	Iron "NetMARKS/services/iron/proto"
 	Tools "NetMARKS/services/tools/proto"
 	"NetMARKS/shared"
 	"context"
@@ -28,7 +28,7 @@ const ServiceName = "Tools"
 const ServicePort = "8080"
 
 const BoardServiceAddr = "netmarks-board.default.svc.cluster.local:8080"
-const IronoreServiceAddr = "netmarks-ironore.default.svc.cluster.local:8080"
+const IronServiceAddr = "netmarks-iron.default.svc.cluster.local:8080"
 
 var NodeName = os.Getenv("K8S_NODE_NAME")
 var RequestCount, InterNodeRequestCount = shared.InitPrometheusRequestCountMetrics()
@@ -37,14 +37,14 @@ var RequestCount, InterNodeRequestCount = shared.InitPrometheusRequestCountMetri
 
 type ToolsServer struct {
 	Tools.UnimplementedToolsServer
-	boardClient   Board.BoardClient
-	ironoreClient Ironore.IronoreClient
+	boardClient Board.BoardClient
+	ironClient  Iron.IronClient
 }
 
-func NewToolsServer(b Board.BoardClient, i Ironore.IronoreClient) *ToolsServer {
+func NewToolsServer(b Board.BoardClient, i Iron.IronClient) *ToolsServer {
 	return &ToolsServer{
-		boardClient:   b,
-		ironoreClient: i,
+		boardClient: b,
+		ironClient:  i,
 	}
 }
 
@@ -53,8 +53,8 @@ func newGRPCServer(lis net.Listener) error {
 	reflection.Register(grpcServer)
 
 	boardClient := Board.NewBoardClient(shared.InitGrpcClientConn(BoardServiceAddr))
-	ironoreClient := Ironore.NewIronoreClient(shared.InitGrpcClientConn(IronoreServiceAddr))
-	Tools.RegisterToolsServer(grpcServer, NewToolsServer(boardClient, ironoreClient))
+	ironClient := Iron.NewIronClient(shared.InitGrpcClientConn(IronServiceAddr))
+	Tools.RegisterToolsServer(grpcServer, NewToolsServer(boardClient, ironClient))
 
 	return grpcServer.Serve(lis)
 }
@@ -82,7 +82,7 @@ func (s *ToolsServer) Produce(ctx context.Context, req *Tools.Request) (*Tools.R
 		}
 
 		go shared.ConcurrentGRPCBoard(ctx, req.ResponseSize, s.boardClient, &wg, ch)
-		go shared.ConcurrentGRPCIronore(ctx, req.ResponseSize, s.ironoreClient, &wg, ch)
+		go shared.ConcurrentGRPCIron(ctx, req.ResponseSize, s.ironClient, &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)
@@ -156,7 +156,7 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 		}
 
 		go shared.ConcurrentHTTPRequest("http://"+BoardServiceAddr+"?response_size="+responseSize, "board", NodeName, requestId, originalRequestService, &wg, ch)
-		go shared.ConcurrentHTTPRequest("http://"+IronoreServiceAddr+"?response_size="+responseSize, "ironore", NodeName, requestId, originalRequestService, &wg, ch)
+		go shared.ConcurrentHTTPRequest("http://"+IronServiceAddr+"?response_size="+responseSize, "ironore", NodeName, requestId, originalRequestService, &wg, ch)
 		go func() {
 			wg.Wait()
 			close(ch)
