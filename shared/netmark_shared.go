@@ -110,7 +110,10 @@ func InitPrometheusRequestCountMetrics() (*prometheus.CounterVec, *prometheus.Co
 }
 
 func UpdateRequestMetrics(requestCounter, interNodeRequestCounter *prometheus.CounterVec, originalRequestService, serviceName, upstreamNodeName, nodeName string) {
-	IncreaseRequestCount(requestCounter, originalRequestService, serviceName, upstreamNodeName, nodeName)
+	fmt.Printf("Request Metrics for: %s on Node: %s. Upstreaming request is from: %s on Node: %s\n", serviceName, nodeName, originalRequestService, upstreamNodeName)
+	if originalRequestService != serviceName {
+		IncreaseRequestCount(requestCounter, originalRequestService, serviceName, upstreamNodeName, nodeName)
+	}
 
 	if upstreamNodeName != nodeName {
 		IncreaseRequestCount(interNodeRequestCounter, originalRequestService, serviceName, upstreamNodeName, nodeName)
@@ -380,7 +383,7 @@ func ExtractUpstreamRequestID(header http.Header, serviceName string, nodeName s
 	if len(originalService) > 0 {
 		originalRequestService = originalService
 	} else {
-		originalService = serviceName
+		originalRequestService = serviceName
 	}
 
 	upstream := header.Get("upstream-node-name")

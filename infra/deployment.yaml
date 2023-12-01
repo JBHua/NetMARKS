@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: netmarks-fish
-          image: fish:1.2.3
+          image: fish:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -50,7 +50,7 @@ spec:
     spec:
       containers:
         - name: netmarks-grain
-          image: grain:1.2.3
+          image: grain:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -81,7 +81,7 @@ spec:
     spec:
       containers:
         - name: netmarks-tree
-          image: tree:1.2.3
+          image: tree:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -112,7 +112,7 @@ spec:
     spec:
       containers:
         - name: netmarks-water
-          image: water:1.2.3
+          image: water:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -143,7 +143,7 @@ spec:
     spec:
       containers:
         - name: netmarks-flour
-          image: flour:1.2.3
+          image: flour:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -174,7 +174,7 @@ spec:
     spec:
       containers:
         - name: netmarks-log
-          image: log:1.2.3
+          image: log:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -205,7 +205,7 @@ spec:
     spec:
       containers:
         - name: netmarks-board
-          image: board:1.2.3
+          image: board:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -236,7 +236,7 @@ spec:
     spec:
       containers:
         - name: netmarks-beer
-          image: beer:1.2.3
+          image: beer:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -267,7 +267,7 @@ spec:
     spec:
       containers:
         - name: netmarks-pig
-          image: pig:1.2.3
+          image: pig:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -298,7 +298,7 @@ spec:
     spec:
       containers:
         - name: netmarks-boat
-          image: boat:1.2.3
+          image: boat:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -329,7 +329,7 @@ spec:
     spec:
       containers:
         - name: netmarks-meat
-          image: meat:1.2.3
+          image: meat:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -360,7 +360,7 @@ spec:
     spec:
       containers:
         - name: netmarks-bread
-          image: bread:1.2.3
+          image: bread:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -391,7 +391,7 @@ spec:
     spec:
       containers:
         - name: netmarks-coal
-          image: coal:1.2.3
+          image: coal:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -422,7 +422,7 @@ spec:
     spec:
       containers:
         - name: netmarks-gold
-          image: gold:1.2.3
+          image: gold:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -453,7 +453,7 @@ spec:
     spec:
       containers:
         - name: netmarks-ironore
-          image: ironore:1.2.3
+          image: ironore:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -484,7 +484,7 @@ spec:
     spec:
       containers:
         - name: netmarks-coin
-          image: coin:1.2.3
+          image: coin:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -515,7 +515,7 @@ spec:
     spec:
       containers:
         - name: netmarks-iron
-          image: iron:1.2.3
+          image: iron:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -546,7 +546,7 @@ spec:
     spec:
       containers:
         - name: netmarks-tools
-          image: tools:1.2.3
+          image: tools:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -577,7 +577,7 @@ spec:
     spec:
       containers:
         - name: netmarks-sword
-          image: sword:1.2.3
+          image: sword:1.2.8
           ports:
             - containerPort: 8080
           env:

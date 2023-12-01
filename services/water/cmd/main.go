@@ -102,11 +102,14 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 	}
 	for i := uint64(0); i < quantity; i++ {
 		response.Quantity += 1
+
+		requestId, originalRequestService, upstreamNodeName := shared.ExtractUpstreamRequestID(r.Header, ServiceName, NodeName)
 		response.Items = append(response.Items, shared.SingleBasicType{
-			Id:             shared.GenerateRandomUUID(),
+			Id:             requestId,
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, responseSize),
 		})
 
+		shared.UpdateRequestMetrics(RequestCount, InterNodeRequestCount, originalRequestService, ServiceName, NodeName, upstreamNodeName)
 		time.Sleep(time.Duration(latency) * time.Millisecond)
 	}
 
@@ -125,6 +128,7 @@ func main() {
 	shared.ConfigureRuntime()
 	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 200
 	prometheus.MustRegister(RequestCount)
+	prometheus.MustRegister(InterNodeRequestCount)
 
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", ServicePort))
 	if err != nil {

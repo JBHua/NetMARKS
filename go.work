@@ -25,4 +25,5 @@ use (
 
 	netmark-scheduler
 	netmark-scoring
+	test/inter-node_communication
 )

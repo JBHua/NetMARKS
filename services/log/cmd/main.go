@@ -162,6 +162,7 @@ func main() {
 	shared.ConfigureRuntime()
 	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 200
 	prometheus.MustRegister(RequestCount)
+	prometheus.MustRegister(InterNodeRequestCount)
 
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", ServicePort))
 	if err != nil {
