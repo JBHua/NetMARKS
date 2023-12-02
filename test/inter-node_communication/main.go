@@ -13,8 +13,8 @@ import (
 	"time"
 )
 
-const port = ":63583"
 const responseSize = "4k"
+const iterationCount = 30
 
 var services = map[string]string{
 	"Beer":    "63583",
@@ -87,15 +87,17 @@ func MakeHTTPRequest(serviceName, port string, wg *sync.WaitGroup) int {
 func main() {
 
 	//Step 1: Iterate over all services, sending each service 10 requests
-	var wg sync.WaitGroup
-	for serviceName, servicePort := range services {
-		for i := 0; i < 10; i++ {
-			wg.Add(1)
-			go MakeHTTPRequest(serviceName, servicePort, &wg)
-		}
-
-		wg.Wait()
-	}
+	//var wg sync.WaitGroup
+	//for serviceName, servicePort := range services {
+	//	for i := 0; i < iterationCount; i++ {
+	//		wg.Add(1)
+	//		go MakeHTTPRequest(serviceName, servicePort, &wg)
+	//	}
+	//
+	//	wg.Wait()
+	//}
+	//Wait till metrics got scrapped by prometheus
+	//time.Sleep(10 * time.Second)
 
 	// Step 2: For every service, add up the total sub-request count && internode sub-request count
 	client, err := api.NewClient(api.Config{Address: "http://localhost:9090"})
@@ -120,8 +122,8 @@ func main() {
 	sort.Strings(keys)
 
 	for _, serviceName := range keys {
-		fmt.Printf("Serivice: %s has a total sub-request count of: %f\n", serviceName, float64(result[serviceName])/10)
-		fmt.Printf("Serivice: %s has a total InterNode request of: %f\n", serviceName, float64(result["InterNode"+serviceName])/10)
+		fmt.Printf("Serivice: %s has a total sub-request count of: %f\n", serviceName, float64(result[serviceName])/iterationCount)
+		fmt.Printf("Serivice: %s has a total InterNode request of: %f\n", serviceName, float64(result["InterNode"+serviceName])/iterationCount)
 
 		fmt.Printf("\n")
 	}
