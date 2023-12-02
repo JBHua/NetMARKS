@@ -14,7 +14,7 @@ import (
 )
 
 const responseSize = "4k"
-const iterationCount = 30
+const iterationCount = 1
 
 var services = map[string]string{
 	"Beer":    "63583",
