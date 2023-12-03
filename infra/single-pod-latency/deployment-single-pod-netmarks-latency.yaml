@@ -1,0 +1,589 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-fish
+  labels:
+    app: netmarks-fish
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-fish
+  template:
+    metadata:
+      labels:
+        app: netmarks-fish
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      nodeName: minikube-m02
+      containers:
+        - name: netmarks-fish
+          image: fish:2.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-grain
+  labels:
+    app: netmarks-grain
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-grain
+  template:
+    metadata:
+      labels:
+        app: netmarks-grain
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      nodeName: minikube-m04
+      containers:
+        - name: netmarks-grain
+          image: grain:2.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-tree
+  labels:
+    app: netmarks-tree
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-tree
+  template:
+    metadata:
+      labels:
+        app: netmarks-tree
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      nodeName: minikube-m03
+      containers:
+        - name: netmarks-tree
+          image: tree:2.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-water
+  labels:
+    app: netmarks-water
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-water
+  template:
+    metadata:
+      labels:
+        app: netmarks-water
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      nodeName: minikube-m02
+      containers:
+        - name: netmarks-water
+          image: water:2.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-flour
+  labels:
+    app: netmarks-flour
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-flour
+  template:
+    metadata:
+      labels:
+        app: netmarks-flour
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      nodeName: minikube-m05
+      containers:
+        - name: netmarks-flour
+          image: flour:2.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-log
+  labels:
+    app: netmarks-log
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-log
+  template:
+    metadata:
+      labels:
+        app: netmarks-log
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      nodeName: minikube-m05
+      containers:
+        - name: netmarks-log
+          image: log:2.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-board
+  labels:
+    app: netmarks-board
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-board
+  template:
+    metadata:
+      labels:
+        app: netmarks-board
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      nodeName: minikube-m02
+      containers:
+        - name: netmarks-board
+          image: board:2.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-beer
+  labels:
+    app: netmarks-beer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-beer
+  template:
+    metadata:
+      labels:
+        app: netmarks-beer
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      nodeName: minikube-m05
+      containers:
+        - name: netmarks-beer
+          image: beer:2.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-pig
+  labels:
+    app: netmarks-pig
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-pig
+  template:
+    metadata:
+      labels:
+        app: netmarks-pig
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      nodeName: minikube-m05
+      containers:
+        - name: netmarks-pig
+          image: pig:2.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-boat
+  labels:
+    app: netmarks-boat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-boat
+  template:
+    metadata:
+      labels:
+        app: netmarks-boat
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      nodeName: minikube-m04
+      containers:
+        - name: netmarks-boat
+          image: boat:2.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-meat
+  labels:
+    app: netmarks-meat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-meat
+  template:
+    metadata:
+      labels:
+        app: netmarks-meat
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      nodeName: minikube-m02
+      containers:
+        - name: netmarks-meat
+          image: meat:2.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-bread
+  labels:
+    app: netmarks-bread
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-bread
+  template:
+    metadata:
+      labels:
+        app: netmarks-bread
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      nodeName: minikube-m02
+      containers:
+        - name: netmarks-bread
+          image: bread:2.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-coal
+  labels:
+    app: netmarks-coal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-coal
+  template:
+    metadata:
+      labels:
+        app: netmarks-coal
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      nodeName: minikube-m04
+      containers:
+        - name: netmarks-coal
+          image: coal:2.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-gold
+  labels:
+    app: netmarks-gold
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-gold
+  template:
+    metadata:
+      labels:
+        app: netmarks-gold
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      nodeName: minikube-m05
+      containers:
+        - name: netmarks-gold
+          image: gold:2.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-ironore
+  labels:
+    app: netmarks-ironore
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-ironore
+  template:
+    metadata:
+      labels:
+        app: netmarks-ironore
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      nodeName: minikube-m05
+      containers:
+        - name: netmarks-ironore
+          image: ironore:2.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-coin
+  labels:
+    app: netmarks-coin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-coin
+  template:
+    metadata:
+      labels:
+        app: netmarks-coin
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      nodeName: minikube-m02
+      containers:
+        - name: netmarks-coin
+          image: coin:2.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-iron
+  labels:
+    app: netmarks-iron
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-iron
+  template:
+    metadata:
+      labels:
+        app: netmarks-iron
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      nodeName: minikube-m05
+      containers:
+        - name: netmarks-iron
+          image: iron:2.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-tools
+  labels:
+    app: netmarks-tools
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-tools
+  template:
+    metadata:
+      labels:
+        app: netmarks-tools
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      nodeName: minikube-m04
+      containers:
+        - name: netmarks-tools
+          image: tools:2.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netmarks-sword
+  labels:
+    app: netmarks-sword
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netmarks-sword
+  template:
+    metadata:
+      labels:
+        app: netmarks-sword
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8080'
+    spec:
+      nodeName: minikube-m05
+      containers:
+        - name: netmarks-sword
+          image: sword:2.0.0
+          ports:
+            - containerPort: 8080
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+---
