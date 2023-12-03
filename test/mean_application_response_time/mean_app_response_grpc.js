@@ -13,9 +13,29 @@ export const options = {
     ],
 };
 
+const services = {
+    "boat":   "127.0.0.1:50773",
+    "beer":   "127.0.0.1:63583",
+    "board":  "127.0.0.1:63586",
+    "bread":  "127.0.0.1:63590",
+    "coal":   "127.0.0.1:63592",
+    "flour":  "127.0.0.1:63598",
+    "gold":   "127.0.0.1:63600",
+    "ironore":"127.0.0.1:63608",
+    "log":    "127.0.0.1:63610",
+    "meat":   "127.0.0.1:63612",
+    "pig":    "127.0.0.1:63614",
+    "coin"  : "127.0.0.1:63594",
+    "iron"  : "127.0.0.1:63606",
+    "sword"  : "127.0.0.1:63616",
+    "tools"  : "127.0.0.1:63618",
+}
+
 const client = new grpc.Client();
 export default function () {
-    let base_url = `127.0.0.1:${__ENV.PORT}`
+    let serviceName = `${__ENV.SVC_NAME}`
+    let base_url = services[serviceName]
+
     client.connect(base_url, {
         plaintext: true,
         timeout: "3s",
