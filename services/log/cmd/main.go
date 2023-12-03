@@ -57,8 +57,6 @@ func (s *LogServer) Produce(ctx context.Context, req *Log.Request) (*Log.Respons
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
 	defer span.End()
 
-	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
-
 	r := Log.Response{}
 	for i := uint64(0); i < req.Quantity; i++ {
 		r.Quantity += 1
@@ -76,8 +74,6 @@ func (s *LogServer) Produce(ctx context.Context, req *Log.Request) (*Log.Respons
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, req.ResponseSize),
 			TreeId:         singleTree.Items[0].Id,
 		})
-
-		time.Sleep(time.Duration(latency) * time.Millisecond)
 	}
 
 	span.SetStatus(codes.Ok, "success")
@@ -111,13 +107,13 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 
 	responseSize := r.URL.Query().Get("response_size")
 
-	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
-
 	response := shared.LogHTTPResponse{
 		Type: ServiceName,
 	}
 	for i := uint64(0); i < quantity; i++ {
 		response.Quantity += 1
+
+		latency := shared.CalculateArtificialLatency(r.Header, NodeName)
 		requestId, originalRequestService, upstreamNodeName := shared.ExtractUpstreamRequestID(r.Header, ServiceName, NodeName)
 
 		req, _ := http.NewRequest("GET", "http://"+TreeServiceAddr+"?response_size="+responseSize, nil)

@@ -55,6 +55,15 @@ func ConfigureRuntime() {
 	fmt.Printf("RUNNING WITH %d CPU\n", 4)
 }
 
+func CalculateArtificialLatency(header http.Header, currentNode string) int64 {
+	upstream := header.Get("upstream-node-name")
+	if len(upstream) > 0 && upstream != currentNode {
+		return 50
+	} else {
+		return 0
+	}
+}
+
 // --------------- Observability-Related Operations ---------------
 
 func SetGRPCHeader(ctx *context.Context) {

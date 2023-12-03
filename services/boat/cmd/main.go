@@ -57,8 +57,6 @@ func (s *BoatServer) Produce(ctx context.Context, req *Boat.Request) (*Boat.Resp
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
 	defer span.End()
 
-	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
-
 	r := Boat.Response{}
 	for i := uint64(0); i < req.Quantity; i++ {
 		r.Quantity += 1
@@ -76,8 +74,6 @@ func (s *BoatServer) Produce(ctx context.Context, req *Boat.Request) (*Boat.Resp
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, req.ResponseSize),
 			BoardId:        singleGrain.Items[0].Id,
 		})
-
-		time.Sleep(time.Duration(latency) * time.Millisecond)
 	}
 
 	span.SetStatus(codes.Ok, "success")
@@ -111,13 +107,13 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 
 	responseSize := r.URL.Query().Get("response_size")
 
-	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
-
 	response := shared.BoatHTTPResponse{
 		Type: ServiceName,
 	}
 	for i := uint64(0); i < quantity; i++ {
 		response.Quantity += 1
+
+		latency := shared.CalculateArtificialLatency(r.Header, NodeName)
 		requestId, originalRequestService, upstreamNodeName := shared.ExtractUpstreamRequestID(r.Header, ServiceName, NodeName)
 
 		req, _ := http.NewRequest("GET", "http://"+BoardServiceAddr+"?response_size="+responseSize, nil)

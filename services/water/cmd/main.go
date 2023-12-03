@@ -51,8 +51,6 @@ func (s *WaterServer) Produce(ctx context.Context, req *Water.Request) (*Water.R
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
 	defer span.End()
 
-	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
-
 	r := Water.Response{}
 	for i := uint64(0); i < req.Quantity; i++ {
 		r.Quantity += 1
@@ -60,8 +58,6 @@ func (s *WaterServer) Produce(ctx context.Context, req *Water.Request) (*Water.R
 			Id:             shared.GenerateRandomUUID(),
 			RandomMetadata: shared.GenerateFakeMetadataString(ctx, req.ResponseSize),
 		})
-
-		time.Sleep(time.Duration(latency) * time.Millisecond)
 	}
 
 	span.SetStatus(codes.Ok, "success")
@@ -95,14 +91,13 @@ func Produce(w http.ResponseWriter, r *http.Request) {
 
 	responseSize := r.URL.Query().Get("response_size")
 
-	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
-
 	response := shared.BasicTypeHTTPResponse{
 		Type: ServiceName,
 	}
 	for i := uint64(0); i < quantity; i++ {
 		response.Quantity += 1
 
+		latency := shared.CalculateArtificialLatency(r.Header, NodeName)
 		requestId, originalRequestService, upstreamNodeName := shared.ExtractUpstreamRequestID(r.Header, ServiceName, NodeName)
 		response.Items = append(response.Items, shared.SingleBasicType{
 			Id:             requestId,

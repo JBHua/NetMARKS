@@ -64,6 +64,7 @@ func (n *NetworkTraffic) NormalizeScore(ctx context.Context, state *framework.Cy
 			higherScore = node.Score
 		}
 	}
+
 	// 计算公式为，满分 - (当前带宽 / 最高最高带宽 * 100)
 	// 公式的计算结果为，带宽占用越大的机器，分数越低
 	for i, node := range scores {
