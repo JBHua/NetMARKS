@@ -1,4 +1,4 @@
-# Beer
+## Beer
 ### 01 or 02
 Pod netmarks-beer-bcc6f564f-26hn2 on Node minikube has a score of 739500.000000
 Pod netmarks-beer-bcc6f564f-26hn2 on Node minikube-m02 has a score of 739500.000000
@@ -14,7 +14,7 @@ Pod netmarks-beer-bcc6f564f-lc8gl on Node minikube-m05 has a score of 0.000000
 
 
 
-# Board
+## Board
 ### 04 or 05
 Pod netmarks-board-f7db75b4f-gxw59 on Node minikube has a score of 0.000000
 Pod netmarks-board-f7db75b4f-gxw59 on Node minikube-m02 has a score of 42840.000000

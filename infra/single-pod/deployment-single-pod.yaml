@@ -5,7 +5,7 @@ metadata:
   labels:
     app: netmarks-fish
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-fish
@@ -36,7 +36,7 @@ metadata:
   labels:
     app: netmarks-grain
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-grain
@@ -67,7 +67,7 @@ metadata:
   labels:
     app: netmarks-tree
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-tree
@@ -98,7 +98,7 @@ metadata:
   labels:
     app: netmarks-water
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-water
@@ -129,7 +129,7 @@ metadata:
   labels:
     app: netmarks-flour
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-flour
@@ -160,7 +160,7 @@ metadata:
   labels:
     app: netmarks-log
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-log
@@ -191,7 +191,7 @@ metadata:
   labels:
     app: netmarks-board
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-board
@@ -222,7 +222,7 @@ metadata:
   labels:
     app: netmarks-beer
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-beer
@@ -253,7 +253,7 @@ metadata:
   labels:
     app: netmarks-pig
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-pig
@@ -284,7 +284,7 @@ metadata:
   labels:
     app: netmarks-boat
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-boat
@@ -298,7 +298,7 @@ spec:
     spec:
       containers:
         - name: netmarks-boat
-          image: boat:1.2.8
+          image: boat:1.2.9
           ports:
             - containerPort: 8080
           env:
@@ -315,7 +315,7 @@ metadata:
   labels:
     app: netmarks-meat
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-meat
@@ -346,7 +346,7 @@ metadata:
   labels:
     app: netmarks-bread
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-bread
@@ -377,7 +377,7 @@ metadata:
   labels:
     app: netmarks-coal
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-coal
@@ -408,7 +408,7 @@ metadata:
   labels:
     app: netmarks-gold
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-gold
@@ -439,7 +439,7 @@ metadata:
   labels:
     app: netmarks-ironore
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-ironore

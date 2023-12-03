@@ -13,7 +13,7 @@ export const options = {
 // Step 0: Init Code
 // regular services
 const services = {
-    "netmarks-boat":   "http://127.0.0.1:63588",
+    "netmarks-boat":   "http://127.0.0.1:50773",
     "netmarks-beer":   "http://127.0.0.1:63583",
     "netmarks-board":  "http://127.0.0.1:63586",
     "netmarks-bread":  "http://127.0.0.1:63590",

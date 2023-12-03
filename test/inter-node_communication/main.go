@@ -14,12 +14,12 @@ import (
 )
 
 const responseSize = "4k"
-const iterationCount = 1
+const iterationCount = 50
 
 var services = map[string]string{
 	"Beer":    "63583",
 	"Board":   "63586",
-	"Boat":    "63588",
+	"Boat":    "50773",
 	"Bread":   "63590",
 	"Coal":    "63592",
 	"Coin":    "63594",
@@ -85,19 +85,19 @@ func MakeHTTPRequest(serviceName, port string, wg *sync.WaitGroup) int {
 }
 
 func main() {
+	// Step 1: Iterate over all services, sending each service 10 requests
+	var wg sync.WaitGroup
+	for serviceName, servicePort := range services {
+		for i := 0; i < iterationCount; i++ {
+			wg.Add(1)
+			go MakeHTTPRequest(serviceName, servicePort, &wg)
+			time.Sleep(100 * time.Millisecond)
+		}
 
-	//Step 1: Iterate over all services, sending each service 10 requests
-	//var wg sync.WaitGroup
-	//for serviceName, servicePort := range services {
-	//	for i := 0; i < iterationCount; i++ {
-	//		wg.Add(1)
-	//		go MakeHTTPRequest(serviceName, servicePort, &wg)
-	//	}
-	//
-	//	wg.Wait()
-	//}
-	//Wait till metrics got scrapped by prometheus
-	//time.Sleep(10 * time.Second)
+		wg.Wait()
+	}
+	// Wait till metrics got scrapped by prometheus
+	time.Sleep(30 * time.Second)
 
 	// Step 2: For every service, add up the total sub-request count && internode sub-request count
 	client, err := api.NewClient(api.Config{Address: "http://localhost:9090"})

@@ -56,10 +56,6 @@ func (s *BoatServer) Produce(ctx context.Context, req *Boat.Request) (*Boat.Resp
 	shared.SetGRPCHeader(&ctx)
 	ctx, span := shared.InitServerSpan(ctx, ServiceName)
 	defer span.End()
-	defer RequestCount.With(prometheus.Labels{
-		"service_name": ServiceName,
-		"node_name":    NodeName,
-	}).Inc()
 
 	latency, _ := strconv.ParseInt(os.Getenv("CONSTANT_LATENCY"), 10, 32)
 

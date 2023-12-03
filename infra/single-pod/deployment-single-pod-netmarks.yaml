@@ -5,7 +5,7 @@ metadata:
   labels:
     app: netmarks-fish
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-fish
@@ -17,9 +17,10 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
     spec:
+      nodeName: minikube-m02
       containers:
         - name: netmarks-fish
-          image: fish:1.0.1
+          image: fish:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -27,7 +28,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -36,7 +36,7 @@ metadata:
   labels:
     app: netmarks-grain
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-grain
@@ -48,9 +48,10 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
     spec:
+      nodeName: minikube-m04
       containers:
         - name: netmarks-grain
-          image: grain:1.0.1
+          image: grain:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -58,7 +59,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -67,7 +67,7 @@ metadata:
   labels:
     app: netmarks-tree
 spec:
-  replicas: 4
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-tree
@@ -79,9 +79,10 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
     spec:
+      nodeName: minikube-m03
       containers:
         - name: netmarks-tree
-          image: tree:1.0.1
+          image: tree:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -89,7 +90,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -98,7 +98,7 @@ metadata:
   labels:
     app: netmarks-water
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-water
@@ -110,9 +110,10 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
     spec:
+      nodeName: minikube-m02
       containers:
         - name: netmarks-water
-          image: water:1.0.1
+          image: water:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -120,7 +121,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -129,7 +129,7 @@ metadata:
   labels:
     app: netmarks-flour
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-flour
@@ -141,17 +141,17 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
     spec:
+      nodeName: minikube-m05
       containers:
         - name: netmarks-flour
-          image: flour:1.0.1
+          image: flour:1.2.8
           ports:
-             - containerPort: 8080
+            - containerPort: 8080
           env:
             - name: K8S_NODE_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -160,7 +160,7 @@ metadata:
   labels:
     app: netmarks-log
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-log
@@ -172,9 +172,10 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
     spec:
+      nodeName: minikube-m05
       containers:
         - name: netmarks-log
-          image: log:1.0.1
+          image: log:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -182,7 +183,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -191,7 +191,7 @@ metadata:
   labels:
     app: netmarks-board
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-board
@@ -203,9 +203,10 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
     spec:
+      nodeName: minikube-m02
       containers:
         - name: netmarks-board
-          image: board:1.0.1
+          image: board:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -213,7 +214,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -222,7 +222,7 @@ metadata:
   labels:
     app: netmarks-beer
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-beer
@@ -234,9 +234,10 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
     spec:
+      nodeName: minikube-m05
       containers:
         - name: netmarks-beer
-          image: beer:1.0.1
+          image: beer:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -244,7 +245,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -253,7 +253,7 @@ metadata:
   labels:
     app: netmarks-pig
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-pig
@@ -265,9 +265,10 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
     spec:
+      nodeName: minikube-m05
       containers:
         - name: netmarks-pig
-          image: pig:1.0.1
+          image: pig:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -275,7 +276,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -284,7 +284,7 @@ metadata:
   labels:
     app: netmarks-boat
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-boat
@@ -296,9 +296,10 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
     spec:
+      nodeName: minikube-m04
       containers:
         - name: netmarks-boat
-          image: boat:1.0.1
+          image: boat:1.2.9
           ports:
             - containerPort: 8080
           env:
@@ -306,7 +307,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -315,7 +315,7 @@ metadata:
   labels:
     app: netmarks-meat
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-meat
@@ -327,9 +327,10 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
     spec:
+      nodeName: minikube-m02
       containers:
         - name: netmarks-meat
-          image: meat:1.0.1
+          image: meat:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -337,7 +338,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -346,7 +346,7 @@ metadata:
   labels:
     app: netmarks-bread
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-bread
@@ -358,9 +358,10 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
     spec:
+      nodeName: minikube-m02
       containers:
         - name: netmarks-bread
-          image: bread:1.0.1
+          image: bread:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -368,7 +369,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -377,7 +377,7 @@ metadata:
   labels:
     app: netmarks-coal
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-coal
@@ -389,9 +389,10 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
     spec:
+      nodeName: minikube-m04
       containers:
         - name: netmarks-coal
-          image: coal:1.0.1
+          image: coal:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -399,7 +400,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -408,7 +408,7 @@ metadata:
   labels:
     app: netmarks-gold
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-gold
@@ -420,9 +420,10 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
     spec:
+      nodeName: minikube-m05
       containers:
         - name: netmarks-gold
-          image: gold:1.0.1
+          image: gold:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -430,7 +431,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -439,7 +439,7 @@ metadata:
   labels:
     app: netmarks-ironore
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: netmarks-ironore
@@ -451,9 +451,10 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
     spec:
+      nodeName: minikube-m05
       containers:
         - name: netmarks-ironore
-          image: ironore:1.0.1
+          image: ironore:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -461,7 +462,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -482,9 +482,10 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
     spec:
+      nodeName: minikube-m02
       containers:
         - name: netmarks-coin
-          image: coin:1.0.1
+          image: coin:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -492,7 +493,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -513,9 +513,10 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
     spec:
+      nodeName: minikube-m05
       containers:
         - name: netmarks-iron
-          image: iron:1.0.1
+          image: iron:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -523,7 +524,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -544,9 +544,10 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
     spec:
+      nodeName: minikube-m04
       containers:
         - name: netmarks-tools
-          image: tools:1.0.1
+          image: tools:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -554,7 +555,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-#      schedulerName: netmark-scheduler
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -575,9 +575,10 @@ spec:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '8080'
     spec:
+      nodeName: minikube-m05
       containers:
         - name: netmarks-sword
-          image: sword:1.0.1
+          image: sword:1.2.8
           ports:
             - containerPort: 8080
           env:
@@ -585,5 +586,4 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-#      schedulerName: netmark-scheduler
 ---
